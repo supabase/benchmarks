@@ -43,13 +43,9 @@ export default () => {
           topic: 'realtime:*',
           event: 'phx_join',
           payload: {
-            configs: {
-              presence: {
-                type: 'presence',
-                eventFilter: {
-                  event: 'SYNC',
-                },
-              },
+            config: {
+              broadcast: { self: false, ack: false },
+              presence: { key: '' },
             },
           },
           ref: '1',
@@ -69,22 +65,13 @@ export default () => {
             topic: 'realtime:any',
             event: 'phx_join',
             payload: {
-              configs: {
-                realtime: {
-                  type: 'realtime',
-                  eventFilter: {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'load_messages',
-                    filter: `room_id=eq.${room}`,
-                  },
-                },
-                broadcast: {
-                  type: 'broadcast',
-                  eventFilter: {
-                    event: 'MESSAGE',
-                  },
-                },
+              config: {
+                postgres_changes: [{
+                  event: 'INSERT',
+                  schema: 'public',
+                  table: 'load_messages',
+                  filter: `room_id=eq.${room}`,
+                }],
               },
             },
             ref: '3',
