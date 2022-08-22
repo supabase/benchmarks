@@ -40,19 +40,6 @@ export default () => {
       // Join channel
       socket.send(
         JSON.stringify({
-          topic: 'realtime:*',
-          event: 'phx_join',
-          payload: {
-            config: {
-              broadcast: { self: false, ack: false },
-              presence: { key: '' },
-            },
-          },
-          ref: '1',
-        })
-      )
-      socket.send(
-        JSON.stringify({
           topic: `realtime:${randomRoom}`,
           event: 'phx_join',
           payload: {},
@@ -66,12 +53,14 @@ export default () => {
             event: 'phx_join',
             payload: {
               config: {
-                postgres_changes: [{
-                  event: 'INSERT',
-                  schema: 'public',
-                  table: 'load_messages',
-                  filter: `room_id=eq.${room}`,
-                }],
+                postgres_changes: [
+                  {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'load_messages',
+                    filter: `room_id=eq.${room}`,
+                  },
+                ],
               },
             },
             ref: '3',
@@ -86,14 +75,6 @@ export default () => {
             access_token: token,
           },
           ref: '4',
-        })
-      )
-      socket.send(
-        JSON.stringify({
-          topic: 'realtime:*',
-          event: 'access_token',
-          payload: { access_token: token },
-          ref: '5',
         })
       )
       rooms.map((room) =>
@@ -128,27 +109,23 @@ export default () => {
       // console.log(msg)
       // console.log('----------------')
       msg = JSON.parse(msg)
-      if (
-        msg.event === 'phx_reply' ||
-        msg.event === 'phx_error' ||
-        msg.event === 'presence_state'
-      ) {
+      if (msg.event !== 'postgres_changes') {
         return
       }
 
       const type = msg.payload.type
       let updated = 0
-      if (msg.payload.record) {
-        updated = Date.parse(msg.payload.record.created_at.substr(0, 23))
+      if (msg.payload.data.record) {
+        updated = Date.parse(msg.payload.data.record.created_at)
       } else {
-        updated = new Date(msg.payload.commit_timestamp)
+        updated = new Date(msg.payload.data.commit_timestamp)
       }
 
       latencyTrend.add(now - updated, { type: type })
       counterReceived.add(1)
 
       check(msg, {
-        'got realtime notification': (msg) => msg.topic === 'realtime:*',
+        'got realtime notification': (msg) => msg.topic === 'realtime:any',
       })
     })
 
