@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+            http-equiv="Content-Security-Policy"
+            content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' http://localhost:* data:; connect-src 'self' http://localhost:*; script-src 'self' 'sha256-GRUzBA7PzKYug7pqxv5rJaec5bwDCw1Vo6/IXwvD3Tc='"
+        />
+
+        <title>Supabench</title>
+
+        <link rel="apple-touch-icon" sizes="180x180" href="./images/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="./images/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="16x16" href="./images/favicon.ico" />
+        <link rel="manifest" href="./images/favicon.ico" />
+        <link rel="mask-icon" href="./images/favicon.ico" />
+        <link rel="shortcut icon" href="./images/favicon.ico" />
+        <meta name="msapplication-TileColor" content="#ffffff" />
+        <meta name="theme-color" content="#ffffff" />
+
+        <script>
+            window.Prism = window.Prism || {};
+            window.Prism.manual = true;
+        </script>
+    </head>
+    <body>
+        <div id="app"></div>
+        <script type="module" src="./src/main.js"></script>
+    </body>
+</html>

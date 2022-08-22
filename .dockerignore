@@ -1,0 +1,55 @@
+# Common
+README.md
+CHANGELOG.md
+docker-compose.yml
+Dockerfile
+
+# JetBrains
+.idea
+
+# git
+.git
+.gitattributes
+.gitignore
+
+# Node
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+## Dependency directories
+node_modules/
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+out
+bin
+
+# local dev data
+pb_data
+
+# editor specific
+.vscode/settings.json
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Go workspace file
+go.work
+
+# random stuff
+summary.json
+example
+
+# tf
+.terraform.lock.hcl
+.terraform/
