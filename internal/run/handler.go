@@ -1,6 +1,8 @@
 package run
 
 import (
+	"strings"
+
 	"github.com/labstack/echo/v5"
 	"github.com/supabase/supabench/internal/execution"
 	"github.com/supabase/supabench/models"
@@ -22,6 +24,12 @@ func NewHandler(app *execution.App) echo.HandlerFunc {
 		run.RefreshUpdated()
 		run.TriggeredAt = run.Created
 		run.Status = "pending"
+		run.Name = strings.ReplaceAll(strings.TrimSpace(run.Name), " ", "_")
+		if run.Origin != nil {
+			o := strings.TrimSpace(*run.Origin)
+			o = strings.ReplaceAll(o, " ", "_")
+			run.Origin = &o
+		}
 
 		if err := app.PB.DB().Model(&run).
 			Insert(

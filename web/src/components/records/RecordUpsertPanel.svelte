@@ -83,8 +83,8 @@
 
         const data = {
             benchmark_id: project.id,
-            name: record.run_name,
-            origin: record.run_origin,
+            name: record.run_name.trimEnd().replaceAll(" ", "_"),
+            origin: record.run_origin.trimEnd().replaceAll(" ", "_"),
         }
 
         let request;
@@ -100,7 +100,7 @@
         request
             .then(async (result) => {
                 addSuccessToast(
-                    record.isNew ? "Successfully created record." : "Successfully updated record."
+                    record.isNew ? "Successfully created run." : "Successfully updated record."
                 );
                 confirmClose = false;
                 hide();
