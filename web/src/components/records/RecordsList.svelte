@@ -185,6 +185,12 @@
                         <span class="txt">status</span>
                     </div>
                 </SortHeader>
+                <SortHeader class="col-type-text col-field-comment" name="comment" bind:sort>
+                  <div class="col-header-content">
+                      <i class={CommonHelper.getFieldTypeIcon("text")} />
+                      <span class="txt">comment</span>
+                  </div>
+                </SortHeader>
                 <SortHeader class="col-type-date col-field-created" name="created" bind:sort>
                     <div class="col-header-content">
                         <i class={CommonHelper.getFieldTypeIcon("date")} />
@@ -255,6 +261,12 @@
                     
                     <td class="col-type-date col-field-status">
                       <span class="label">{record.status}</span>
+                    </td>
+
+                    <td class="col-type-text col-field-comment">
+                      <span class="txt txt-ellipsis" title={record.comment}>
+                          {record.comment}
+                      </span>
                     </td>
                     
                     <td class="col-type-date col-field-created">

@@ -272,6 +272,24 @@ func init() {
 		}
 
 		dao := daos.New(db)
+
+		profiles, err := dao.FindCollectionByNameOrId("profiles")
+		if err != nil {
+			return err
+		}
+		profiles.Schema.AddField(&schema.SchemaField{
+			Name: "role",
+			Type: schema.FieldTypeSelect,
+			Options: &schema.SelectOptions{
+				MaxSelect: 1,
+				Values:    []string{"privileged", "viewer"},
+			},
+		})
+
+		if err := dao.SaveCollection(profiles); err != nil {
+			return err
+		}
+
 		if err := dao.SaveCollection(projects); err != nil {
 			return err
 		}
@@ -293,6 +311,18 @@ func init() {
 			return err
 		}
 		if _, err := db.DropTable("projects").Execute(); err != nil {
+			return err
+		}
+
+		dao := daos.New(db)
+
+		profiles, err := dao.FindCollectionByNameOrId("profiles")
+		if err != nil {
+			return err
+		}
+		f := profiles.Schema.GetFieldByName("role")
+		profiles.Schema.RemoveField(f.Id)
+		if err := dao.SaveCollection(profiles); err != nil {
 			return err
 		}
 
