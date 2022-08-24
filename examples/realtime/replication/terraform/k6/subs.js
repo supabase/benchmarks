@@ -42,8 +42,19 @@ export default () => {
         JSON.stringify({
           topic: `realtime:${randomRoom}`,
           event: 'phx_join',
-          payload: {},
-          ref: '2',
+          payload: {
+            config: {
+              broadcast: {
+                self: true,
+              },
+              presence: {
+                key: '',
+              },
+              postgres_changes: [],
+            },
+          },
+          ref: '1',
+          join_ref: '1',
         })
       )
       rooms.map((room) =>
@@ -63,7 +74,8 @@ export default () => {
                 ],
               },
             },
-            ref: '3',
+            ref: '2',
+            join_ref: '2',
           })
         )
       )
@@ -74,18 +86,18 @@ export default () => {
           payload: {
             access_token: token,
           },
-          ref: '4',
+          ref: '3',
         })
       )
       rooms.map((room) =>
         socket.send(
           JSON.stringify({
-            topic: `realtime:${room}`,
+            topic: `realtime:any`,
             event: 'access_token',
             payload: {
               access_token: token,
             },
-            ref: '6',
+            ref: '4',
           })
         )
       )
@@ -109,6 +121,14 @@ export default () => {
       // console.log(msg)
       // console.log('----------------')
       msg = JSON.parse(msg)
+
+      if (msg.event === 'system') {
+        check(msg, {
+          'subscribed to realtime': (msg) =>
+            msg.topic === 'realtime:any' && msg.payload.status === 'ok',
+        })
+      }
+
       if (msg.event !== 'postgres_changes') {
         return
       }
