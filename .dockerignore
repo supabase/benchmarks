@@ -48,7 +48,7 @@ go.work
 
 # random stuff
 summary.json
-example
+examples
 
 # tf
 .terraform.lock.hcl

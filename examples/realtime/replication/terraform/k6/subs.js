@@ -151,7 +151,7 @@ export default () => {
 
     socket.on('error', (e) => {
       if (e.error() != 'websocket: close sent') {
-        console.error('An unexpected error occured: ', e.error())
+        console.error('An unexpected error occurred: ', e.error())
       }
     })
 

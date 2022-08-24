@@ -8,19 +8,8 @@
     import { confirm } from "@/stores/confirmation";
     import { addSuccessToast } from "@/stores/toasts";
     import Field from "@/components/base/Field.svelte";
-    import Toggler from "@/components/base/Toggler.svelte";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
     import TextField from "@/components/records/fields/TextField.svelte";
-    import NumberField from "@/components/records/fields/NumberField.svelte";
-    import BoolField from "@/components/records/fields/BoolField.svelte";
-    import EmailField from "@/components/records/fields/EmailField.svelte";
-    import UrlField from "@/components/records/fields/UrlField.svelte";
-    import DateField from "@/components/records/fields/DateField.svelte";
-    import SelectField from "@/components/records/fields/SelectField.svelte";
-    import JsonField from "@/components/records/fields/JsonField.svelte";
-    import FileField from "@/components/records/fields/FileField.svelte";
-    import RelationField from "@/components/records/fields/RelationField.svelte";
-    import AutoExpandTextarea from "@/components/base/AutoExpandTextarea.svelte";
 
     const dispatch = createEventDispatcher();
     const formId = "record_" + CommonHelper.randomString(5);
@@ -45,8 +34,6 @@
     $: hasChanges = hasFileChanges || initialFormHash != calculateFormHash(record);
 
     $: canSave = record.isNew || hasChanges;
-
-    $: isProfileProject = project?.name !== import.meta.env.PB_PROFILE_COLLECTION;
 
     export function show(model) {
         load(model);
@@ -112,24 +99,6 @@
             .finally(() => {
                 isSaving = false;
             });
-    }
-
-    function deleteConfirm() {
-        if (!original?.id) {
-            return; // nothing to delete
-        }
-
-        confirm(`Do you really want to delete the selected record?`, () => {
-            return ApiClient.records.delete(original["runs"], original.id)
-                .then(() => {
-                    hide();
-                    addSuccessToast("Successfully deleted record.");
-                    dispatch("delete", original);
-                })
-                .catch((err) => {
-                    ApiClient.errorResponseHandler(err);
-                });
-        });
     }
 </script>
 

@@ -9,6 +9,7 @@
 *.dylib
 out
 bin
+*.zip
 
 # local dev data
 pb_data/
