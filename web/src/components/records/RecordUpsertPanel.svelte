@@ -10,6 +10,7 @@
     import Field from "@/components/base/Field.svelte";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
     import TextField from "@/components/records/fields/TextField.svelte";
+    import JSONField from "@/components/records/fields/JSONField.svelte";
 
     const dispatch = createEventDispatcher();
     const formId = "record_" + CommonHelper.randomString(5);
@@ -26,6 +27,7 @@
     let initialFormHash = "";
     
     $: grafanaUrl = `${project.grafana_url}&from=${record.started_at}&to=${record.ended_at}&var-testrun=${record.name}`;
+    $: meta = JSON.stringify(record.meta, null, 2);
 
     $: hasFileChanges =
         CommonHelper.hasNonEmptyProps(uploadedFilesMap) ||
@@ -72,6 +74,8 @@
             benchmark_id: project.id,
             name: record.run_name.trimEnd().replaceAll(" ", "_"),
             origin: record.run_origin.trimEnd().replaceAll(" ", "_"),
+            comment: record.run_comment,
+            meta: record.run_meta,
         }
 
         let request;
@@ -155,12 +159,32 @@
                         <i class="ri-bar-chart-grouped-fill" />
                         <span class="txt" style="text-decoration: none; ">Grafana link</span>
                     </label>
-                    <textarea bind:value={grafanaUrl} readonly style="resize: none; padding-top: 4px !important; padding-bottom: 5px !important; min-height: 36px; height: auto; cursor: pointer;" />
+                    <textarea bind:value={grafanaUrl} readonly style="color:black; resize: none; padding-top: 4px !important; padding-bottom: 5px !important; min-height: 36px; height: auto; cursor: pointer;" />
                 </Field>
             </a>
+
+            <Field class="form-field" name="comment" let="form-field-comment">
+              <label for="form-field-comment">
+                  <i class={CommonHelper.getFieldTypeIcon("text")} />
+                  <span class="txt">Comment</span>
+              </label>
+              <textarea bind:value={record.comment} readonly style="color:black; padding-top: 4px !important; padding-bottom: 5px !important; min-height: 96px; height: auto;" />
+            </Field>
+
+            <Field class="form-field" name="meta" let="form-field-meta">
+              <label for="form-field-meta">
+                  <i class={CommonHelper.getFieldTypeIcon("text")} />
+                  <span class="txt">Meta</span>
+              </label>
+              <textarea bind:value={meta} readonly style="color:black; padding-top: 4px !important; padding-bottom: 5px !important; min-height: 96px; height: auto;" />
+            </Field>
         {:else}
             <TextField field={{ required: true, name: "name", type: "primary" }} bind:value={record["run_name"]} />
             <TextField field={{ required: false, name: "origin", type: "text" }} bind:value={record["run_origin"]} />
+
+            <TextField field={{ required: false, name: "comment", type: "text" }} bind:value={record["run_comment"]} />
+            <JSONField field={{ required: false, name: "meta", type: "json" }} bind:value={record["run_meta"]} />
+
             <Field class="form-field required" name="bencmark_id" let:bencmark_id>
                 <label for={bencmark_id}>
                     <i class={CommonHelper.getFieldTypeIcon("relation")} />
