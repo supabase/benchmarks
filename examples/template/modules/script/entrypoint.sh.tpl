@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 # update golang and make sure go is in path
 wget https://golang.org/dl/go1.19.linux-amd64.tar.gz
 sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.19.linux-amd64.tar.gz
