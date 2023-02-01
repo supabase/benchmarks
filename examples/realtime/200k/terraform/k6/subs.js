@@ -6,17 +6,17 @@ import { getRandomInt, scenario, trends } from './common.js'
 export { handleSummary } from './summary.js'
 
 const token = __ENV.MP_TOKEN
-const socketURI = __ENV.MP_URI
-  ? __ENV.MP_URI
-  : 'wss://woopuegececriuknbjus.realtime-qa.abc3.dev/socket/websocket'
+const socketURI = 'wss://realtime-qa.fly.dev/socket/websocket'
 const URL = `${socketURI}?log_level=info&apikey=${token}`
 
-const conns = __ENV.CONNS
-const baseDuration = __ENV.DURATION ? __ENV.DURATION : 60
-const duration = parseInt(baseDuration) + 15
+const conns = 500
+const baseDuration = __ENV.DURATION ? __ENV.DURATION : 120
+const duration = parseInt(baseDuration) + 135
 
 const rooms = []
-rooms.push(`room${getRandomInt(0, __ENV.ROOMS)}`)
+rooms.push(`room0`)
+rooms.push(`room1`)
+rooms.push(`room2`)
 
 const randomRoom = `fGwer43Fge${Math.random().toString(36).slice(2)}`
 
@@ -57,27 +57,27 @@ export default () => {
           join_ref: '1',
         })
       )
-      rooms.map((room) =>
-        socket.send(
-          JSON.stringify({
-            topic: 'realtime:any',
-            event: 'phx_join',
-            payload: {
-              config: {
-                postgres_changes: [
-                  {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'load_messages',
-                    // filter: `room_id=eq.${room}`,
-                  },
-                ],
-              },
+
+      const room = rooms[getRandomInt(0, rooms.length)]
+      socket.send(
+        JSON.stringify({
+          topic: 'realtime:any',
+          event: 'phx_join',
+          payload: {
+            config: {
+              postgres_changes: [
+                {
+                  event: 'INSERT',
+                  schema: 'public',
+                  table: 'load_messages',
+                  // filter: `room_id=eq.${room}`,
+                },
+              ],
             },
-            ref: '2',
-            join_ref: '2',
-          })
-        )
+          },
+          ref: '2',
+          join_ref: '2',
+        })
       )
       socket.send(
         JSON.stringify({
@@ -89,17 +89,15 @@ export default () => {
           ref: '3',
         })
       )
-      rooms.map((room) =>
-        socket.send(
-          JSON.stringify({
-            topic: `realtime:any`,
-            event: 'access_token',
-            payload: {
-              access_token: token,
-            },
-            ref: '4',
-          })
-        )
+      socket.send(
+        JSON.stringify({
+          topic: `realtime:any`,
+          event: 'access_token',
+          payload: {
+            access_token: token,
+          },
+          ref: '4',
+        })
       )
 
       socket.setInterval(() => {

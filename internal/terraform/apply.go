@@ -72,6 +72,7 @@ func (tf *TfExec) Apply(wd string, envs, benchVars map[string]string) error {
 	exec.SetLogger(&logger)
 	// exec.SetStderr(os.Stderr)
 	// exec.SetStdout(os.Stdout)
+	vars = append(vars, tfexec.Parallelism(25))
 	return exec.Apply(context.Background(), vars...)
 }
 
@@ -96,6 +97,7 @@ func (tf *TfExec) Destroy(wd string, envs, benchVars map[string]string) error {
 	exec.SetLogger(&logger)
 	// exec.SetStderr(os.Stderr)
 	// exec.SetStdout(os.Stdout)
+	vars = append(vars, tfexec.Parallelism(25))
 	return exec.Destroy(context.Background(), vars...)
 }
 

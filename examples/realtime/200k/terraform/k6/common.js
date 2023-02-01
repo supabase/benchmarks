@@ -31,33 +31,41 @@ export function scenario(baseDuration, conns) {
     startVUs: 0,
     stages: [
       {
-        duration: `${parseInt(baseDuration) / 12}s`,
+        duration: `${parseInt(baseDuration) / 6}s`,
         target: parseInt(conns) / 2,
       },
       {
-        duration: `${(3 * parseInt(baseDuration)) / 12}s`,
+        duration: `${parseInt(baseDuration) / 6}s`,
         target: parseInt(conns) / 2,
       },
       {
-        duration: `${parseInt(baseDuration) / 12}s`,
+        duration: `${parseInt(baseDuration) / 3}s`,
         target: parseInt(conns),
       },
       {
-        duration: `${(4 * parseInt(baseDuration)) / 12}s`,
+        duration: `${parseInt(baseDuration) / 3}s`,
         target: parseInt(conns),
       },
       {
-        duration: `${parseInt(baseDuration) / 12}s`,
-        target: parseInt(conns) / 2,
+        duration: '30s',
+        target: parseInt(conns) / 4,
       },
       {
-        duration: `${(2 * parseInt(baseDuration)) / 12}s`,
-        target: parseInt(conns) / 2,
+        duration: '60s',
+        target: parseInt(conns) / 4,
       },
     ],
-    gracefulRampDown: '10s',
+    gracefulRampDown: '30s',
   }
 }
 
 /* Exporting an array of default summaryTrendStats to be used in summary result. */
-export const trends = ['avg', 'med', 'p(99)', 'p(95)', 'p(0.1)', 'count']
+export const trends = [
+  'avg',
+  'med',
+  'p(99)',
+  'p(95)',
+  'p(75)',
+  'p(0.1)',
+  'count',
+]
