@@ -63,7 +63,14 @@ func (app *App) teardownBenchmark(run *models.Run) error {
 	}
 
 	// tf apply to run benchmark
-	return app.TF.Destroy(scriptWD, envs, vars)
+	err = app.TF.Destroy(scriptWD, envs, vars)
+	if err != nil {
+		return err
+	}
+	if err = os.RemoveAll(scriptWD); err != nil {
+		log.Warn().Err(err).Msg("cannot remove script unpacked dir")
+	}
+	return nil
 }
 
 func (app *App) getSecretPath(run *models.Run) (string, *models.Secret, error) {
@@ -147,14 +154,13 @@ func unpack(basePath string, secret *models.Secret) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		log.Info().Str("new_wd", scriptWD).Msg("script moved")
 	} else {
 		err = os.Rename(scriptTemp, scriptWD)
 		if err != nil {
 			return "", err
 		}
-		log.Info().Str("new_wd", scriptWD).Msg("script moved")
 	}
+	log.Info().Str("new_wd", scriptWD).Msg("script moved")
 
 	// remove temp
 	if err = os.RemoveAll(scriptTemp); err != nil {
