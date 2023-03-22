@@ -44,8 +44,8 @@ func NewHandler(app *execution.App) echo.HandlerFunc {
 
 		if err := app.PB.DB().Model(&run).
 			Insert(
-				"Id", "BenchmarkID", "Name", "Origin", "Status",
-				"Created", "Updated", "TriggeredAt", "Comment", "Meta",
+				"Id", "BenchmarkID", "Name", "Origin", "Status", "Comment",
+				"Created", "Updated", "TriggeredAt", "Meta", "Vars",
 			); err != nil {
 			return c.JSON(500, map[string]string{"error": err.Error()})
 		}
