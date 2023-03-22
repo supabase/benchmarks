@@ -31,8 +31,13 @@ func (app *App) runBenchmark(run *models.Run) error {
 	}
 
 	// construct envs
-	envs := getEnvFromSecret(secret)
-	vars := getVarsFromSecret(secret)
+	envs := getEnvs(secret.Env)
+	vars := getVars(secret.Vars)
+	for k, v := range getVars(run.Vars) {
+		vars[k] = v
+	}
+
+	// set run meta info
 	vars["benchmark_id"] = run.BenchmarkID
 	vars["testrun_id"] = run.Id
 	vars["testrun_name"] = run.Name
@@ -53,8 +58,8 @@ func (app *App) teardownBenchmark(run *models.Run) error {
 	scriptWD := path.Join(basePath, "script_unpacked")
 
 	// construct envs
-	envs := getEnvFromSecret(secret)
-	vars := getVarsFromSecret(secret)
+	envs := getEnvs(secret.Env)
+	vars := getVars(secret.Env)
 	vars["benchmark_id"] = run.BenchmarkID
 	vars["testrun_id"] = run.Id
 	vars["testrun_name"] = run.Name
@@ -93,12 +98,12 @@ func (app *App) getSecretPath(run *models.Run) (string, *models.Secret, error) {
 	return basePath, &secret, nil
 }
 
-func getEnvFromSecret(secret *models.Secret) map[string]string {
+func getEnvs(e *string) map[string]string {
 	envs := map[string]string{}
-	if secret.Env != nil {
+	if e != nil {
 		secrets := map[string]string{}
 
-		err := json.Unmarshal([]byte(*secret.Env), &secrets)
+		err := json.Unmarshal([]byte(*e), &secrets)
 		if err != nil {
 			log.Warn().
 				Err(errors.New("secret env is not a map[string]string")).
@@ -110,12 +115,12 @@ func getEnvFromSecret(secret *models.Secret) map[string]string {
 	return envs
 }
 
-func getVarsFromSecret(secret *models.Secret) map[string]string {
+func getVars(v *string) map[string]string {
 	vars := map[string]string{}
-	if secret.Vars != nil {
+	if v != nil {
 		secrets := map[string]string{}
 
-		err := json.Unmarshal([]byte(*secret.Vars), &secrets)
+		err := json.Unmarshal([]byte(*v), &secrets)
 		if err != nil {
 			log.Warn().
 				Err(errors.New("secret vars is not a map[string]string")).

@@ -19,6 +19,7 @@ type Run struct {
 	Meta        *string        `json:"meta" omitempty:"true"`
 	Raw         *string        `json:"raw" omitempty:"true"`
 	Comment     *string        `json:"comment" omitempty:"true"`
+	Vars        *string        `json:"vars" omitempty:"true"`
 }
 
 func (r Run) TableName() string {

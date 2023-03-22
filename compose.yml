@@ -1,0 +1,131 @@
+version: '3.5'
+services:
+  supabench:
+    build: .
+    ports:
+      - 8090:8090
+    environment:
+      - SUPABENCH_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.token
+      - SUPABENCH_AWS_SECRET_ACCESS_KEY=1wA6U...
+      - SUPABENCH_AWS_ACCESS_KEY_ID=AKI...
+      - SUPABENCH_PRIVATE_KEY_LOCATION=${SUPABENCH_PRIVATE_SSH_KEY}
+      - SUPABENCH_FLY_TOKEN=AaB...
+    networks:
+      - supabench
+    volumes:
+      - ./pb_data:/pb_data
+
+  telegraf:
+    image: telegraf
+    container_name: telegraf
+    restart: unless-stopped
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - ./.docker/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    depends_on:
+      - victoriametrics
+    networks:
+      - supabench
+    ports:
+      - '8125:8125'
+
+  vmagent:
+    container_name: vmagent
+    image: victoriametrics/vmagent:v1.87.0
+    depends_on:
+      - 'victoriametrics'
+    ports:
+      - 8429:8429
+    volumes:
+      - vmagentdata:/vmagentdata
+      - ./.docker/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--promscrape.config=/etc/prometheus/prometheus.yml'
+      - '--remoteWrite.url=http://victoriametrics:8428/api/v1/write'
+    networks:
+      - supabench
+    restart: always
+  victoriametrics:
+    container_name: victoriametrics
+    image: victoriametrics/victoria-metrics:v1.87.0
+    ports:
+      - 8428:8428
+      - 8089:8089
+      - 8089:8089/udp
+      - 2003:2003
+      - 2003:2003/udp
+      - 4242:4242
+    volumes:
+      - vmdata:/storage
+    command:
+      - '--storageDataPath=/storage'
+      - '--graphiteListenAddr=:2003'
+      - '--opentsdbListenAddr=:4242'
+      - '--httpListenAddr=:8428'
+      - '--influxListenAddr=:8089'
+      - '--vmalert.proxyURL=http://vmalert:8880'
+    networks:
+      - supabench
+    restart: always
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:9.2.7
+    depends_on:
+      - 'victoriametrics'
+    ports:
+      - 3000:3000
+    volumes:
+      - grafanadata:/var/lib/grafana
+      - ./.docker/provisioning/:/etc/grafana/provisioning/
+      - ./.docker/dashboards/:/var/lib/grafana/dashboards/
+    networks:
+      - supabench
+    restart: always
+  vmalert:
+    container_name: vmalert
+    image: victoriametrics/vmalert:v1.87.0
+    depends_on:
+      - 'victoriametrics'
+      - 'alertmanager'
+    ports:
+      - 8880:8880
+    volumes:
+      - ./.docker/alerts.yml:/etc/alerts/alerts.yml
+      - ./.docker/alerts-health.yml:/etc/alerts/alerts-health.yml
+      - ./.docker/alerts-vmagent.yml:/etc/alerts/alerts-vmagent.yml
+      - ./.docker/alerts-vmalert.yml:/etc/alerts/alerts-vmalert.yml
+    command:
+      - '--datasource.url=http://victoriametrics:8428/'
+      - '--remoteRead.url=http://victoriametrics:8428/'
+      - '--remoteWrite.url=http://victoriametrics:8428/'
+      - '--notifier.url=http://alertmanager:9093/'
+      - '--rule=/etc/alerts/*.yml'
+      # display source of alerts in grafana
+      - '--external.url=http://127.0.0.1:3000' #grafana outside container
+      # when copypaste the line be aware of '$$' for escaping in '$expr'
+      - '--external.alert.source=explore?orgId=1&left=["now-1h","now","VictoriaMetrics",{"expr":{{$$expr|jsonEscape|queryEscape}} },{"mode":"Metrics"},{"ui":[true,true,true,"none"]}]'
+    networks:
+      - supabench
+    restart: always
+  alertmanager:
+    container_name: alertmanager
+    image: prom/alertmanager:v0.25.0
+    volumes:
+      - ./.docker/alertmanager.yml:/config/alertmanager.yml
+    command:
+      - '--config.file=/config/alertmanager.yml'
+    ports:
+      - 9093:9093
+    networks:
+      - supabench
+    restart: always
+
+volumes:
+  vmagentdata: {}
+  vmdata: {}
+  grafanadata: {}
+
+networks:
+  supabench:
+    driver: bridge
