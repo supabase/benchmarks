@@ -3,6 +3,7 @@ import http from 'k6/http'
 import { SharedArray } from 'k6/data'
 import { Counter } from 'k6/metrics'
 import { scenario } from 'k6/execution'
+// import { FormData } from 'https://jslib.k6.io/formdata/0.0.2/index.js'
 import { randomIntBetween } from 'https://jslib.k6.io/k6-utils/1.3.0/index.js'
 
 import { scenario as sc, trends, resizeOptions } from './common.js'
@@ -11,6 +12,7 @@ export { handleSummary } from './summary.js'
 const users = new SharedArray('users', function () {
   return JSON.parse(open('./users.json'))
 })
+// const img = open('./3mb.jpg', 'b')
 
 const token = __ENV.ANON_TOKEN
 const serviceToken = __ENV.SERVICE_TOKEN
@@ -146,6 +148,7 @@ export default () => {
           },
         },
       ])
+      // if (ctr % 2 === 0) {
       requestsBatch.push([
         'GET',
         `${imageResizerURI}/${path}?width=${1000 + ctr}&${1000 + ctr}`,
@@ -158,6 +161,7 @@ export default () => {
           },
         },
       ])
+      // }
     }
     const responses = http.batch(requestsBatch)
     responses.map((r) => {
