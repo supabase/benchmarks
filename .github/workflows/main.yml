@@ -32,7 +32,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "By ${{ github.event.pull_request.author_association }}: <${{ github.event.pull_request.user.html_url }}|${{ github.event.pull_request.user.login }}>\n\n${{ github.event.pull_request.body }}"
+                    "text": ${{ toJSON("By ${{ github.event.pull_request.author_association }}: <${{ github.event.pull_request.user.html_url }}|${{ github.event.pull_request.user.login }}>\n\n" + github.event.pull_request.body) }}
                   },
                   "accessory": {
                     "type": "image",
