@@ -32,12 +32,19 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ${{ toJSON("By ${{ github.event.pull_request.author_association }}: <${{ github.event.pull_request.user.html_url }}|${{ github.event.pull_request.user.login }}>\n\n" + github.event.pull_request.body) }}
+                    "text": "By ${{ github.event.pull_request.author_association }}: <${{ github.event.pull_request.user.html_url }}|${{ github.event.pull_request.user.login }}>\n\n"
                   },
                   "accessory": {
                     "type": "image",
                     "image_url": "${{ github.event.pull_request.user.avatar_url }}",
                     "alt_text": "Avatar"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(github.event.pull_request.body) }}
                   }
                 }
               ]
