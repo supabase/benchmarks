@@ -1,0 +1,45 @@
+name: Notify about PRs
+
+on:
+  pull_request:
+    types: [opened, reopened]
+  pull_request_target:
+    types: [opened, reopened]
+
+jobs:
+  notify_slack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send alert to Slack
+        id: slack
+        uses: slackapi/slack-github-action@v1.24.0
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        with:
+          payload: |
+            {
+              "text": "GitHub Pull Request opened in: ${{ github.event.repository }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Title: #${{ github.event.pull_request.number }} [${{ github.event.pull_request.title }}](${{ github.event.pull_request.html_url}})"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "By ${{ github.event.pull_request.author_association }}: [${{ github.event.pull_request.user.login }}](${{ github.event.pull_request.user.html_url }})"
+                  },
+                  "accessory": {
+                    "type": "image",
+                    "image_url": "${{ github.event.pull_request.user.avatar_url }}",
+                    "alt_text": "Avatar"
+                  }
+                }
+              ]
+            }
+        
