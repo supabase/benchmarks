@@ -19,25 +19,32 @@ jobs:
         with:
           payload: |
             {
-              "text": "GitHub Pull Request opened in: ${{ github.event.repository }}",
+              "text": "GitHub Pull Request opened in: ${{ github.event.repository.nameWithOwner }}",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "GitHub Pull Request opened in: ${{ github.event.repository }} \n#${{ github.event.pull_request.number }} <${{ github.event.pull_request.html_url}}|${{ github.event.pull_request.title }}>"
+                    "text": "GitHub Pull Request opened in: ${{ github.event.repository.nameWithOwner }} \n#${{ github.event.pull_request.number }} <${{ github.event.pull_request.html_url}}|${{ github.event.pull_request.title }}>"
                   }
                 },
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ${{ toJSON("By ${{ github.event.pull_request.author_association }}: <${{ github.event.pull_request.user.html_url }}|${{ github.event.pull_request.user.login }}>\n\n" + github.event.pull_request.body) }}
+                    "text": "By ${{ github.event.pull_request.author_association }}: <${{ github.event.pull_request.user.html_url }}|${{ github.event.pull_request.user.login }}>\n\n"
                   },
                   "accessory": {
                     "type": "image",
                     "image_url": "${{ github.event.pull_request.user.avatar_url }}",
                     "alt_text": "Avatar"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(github.event.pull_request.body) }}
                   }
                 }
               ]
