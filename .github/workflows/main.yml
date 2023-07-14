@@ -19,13 +19,13 @@ jobs:
         with:
           payload: |
             {
-              "text": "GitHub Pull Request opened in: ${{ github.event.repository.nameWithOwner }}",
+              "text": "GitHub Pull Request opened in: ${{ github.event.repository.name }}",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "GitHub Pull Request opened in: ${{ github.event.repository.nameWithOwner }} \n#${{ github.event.pull_request.number }} <${{ github.event.pull_request.html_url}}|${{ github.event.pull_request.title }}>"
+                    "text": "GitHub Pull Request opened in: ${{ github.event.repository.name }} \n#${{ github.event.pull_request.number }} <${{ github.event.pull_request.html_url}}|${{ github.event.pull_request.title }}>"
                   }
                 },
                 {
