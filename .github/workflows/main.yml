@@ -25,14 +25,14 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Title: #${{ github.event.pull_request.number }} [${{ github.event.pull_request.title }}](${{ github.event.pull_request.html_url}})"
+                    "text": "GitHub Pull Request opened in: ${{ github.event.repository }} \n#${{ github.event.pull_request.number }} <${{ github.event.pull_request.html_url}}|${{ github.event.pull_request.title }}>"
                   }
                 },
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "By ${{ github.event.pull_request.author_association }}: [${{ github.event.pull_request.user.login }}](${{ github.event.pull_request.user.html_url }})"
+                    "text": "By ${{ github.event.pull_request.author_association }}: <${{ github.event.pull_request.user.html_url }}|${{ github.event.pull_request.user.login }}>\n\n${{ github.event.pull_request.body }}"
                   },
                   "accessory": {
                     "type": "image",
