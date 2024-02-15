@@ -1,0 +1,51 @@
+{
+  "variables": {
+    "aws_access_key": "",
+    "aws_secret_key": "",
+    "aws_region": "ap-southeast-1"
+  },
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "access_key": "{{user `aws_access_key`}}",
+      "secret_key": "{{user `aws_secret_key`}}",
+      "region": "{{user `aws_region`}}",
+      "source_ami": "ami-04d5ff366629647ac",
+      "instance_type": "t4g.micro",
+      "ssh_username": "admin",
+      "temporary_key_pair_type": "ed25519",
+      "ami_name": "supabench-ami-{{timestamp}}",
+      "tags": {
+        "appType": "supabench",
+        "creator": "supabench-packer"
+      },
+      "run_tags": {
+        "creator": "supabench"
+      },
+      "snapshot_tags": {
+        "creator": "supabench"
+      },
+      "run_volume_tags": {
+        "creator": "supabench"
+      },
+      "user_data_file": "./defaults.cfg"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "./defaults.cfg",
+      "destination": "/tmp/defaults.cfg"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sudo mv /tmp/defaults.cfg /etc/cloud/cloud.cfg.d/defaults.cfg"
+      ]
+    },
+    {
+      "type": "shell",
+      "script": "./setup.sh"
+    }
+  ]
+}
