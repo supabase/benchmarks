@@ -7,7 +7,7 @@ require (
 	github.com/labstack/echo/v5 v5.0.0-20220201181537-ed2888cfa198
 	github.com/mholt/archiver/v4 v4.0.0-alpha.7
 	github.com/pocketbase/dbx v1.6.0
-	github.com/pocketbase/pocketbase v0.5.0
+	github.com/pocketbase/pocketbase v0.5.1
 	github.com/rs/zerolog v1.27.0
 	github.com/spf13/viper v1.12.0
 )
