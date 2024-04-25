@@ -59,7 +59,10 @@ func (app *App) teardownBenchmark(run *models.Run) error {
 
 	// construct envs
 	envs := getEnvs(secret.Env)
-	vars := getVars(secret.Env)
+	vars := getVars(secret.Vars)
+	for k, v := range getVars(run.Vars) {
+		vars[k] = v
+	}
 	vars["benchmark_id"] = run.BenchmarkID
 	vars["testrun_id"] = run.Id
 	vars["testrun_name"] = run.Name
