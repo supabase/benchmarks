@@ -5,7 +5,10 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v5"
+	"github.com/pocketbase/dbx"
+	"github.com/rs/zerolog/log"
 	"github.com/supabase/supabench/internal/execution"
+	"github.com/supabase/supabench/internal/gh"
 	"github.com/supabase/supabench/models"
 )
 
@@ -14,14 +17,15 @@ var nameRegex = regexp.MustCompile("^[a-zA-Z0-9.:_-]*$")
 
 func NewHandler(app *execution.App) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		run := models.Run{}
-		if err := c.Echo().JSONSerializer.Deserialize(c, &run); err != nil {
+		newrun := models.NewRun{}
+		if err := c.Echo().JSONSerializer.Deserialize(c, &newrun); err != nil {
 			return c.JSON(400, map[string]string{"error": err.Error()})
 		}
 
-		if run.BenchmarkID == "" || run.Name == "" {
+		if newrun.BenchmarkID == "" || newrun.Name == "" {
 			return c.JSON(400, map[string]string{"error": "missing required fields: benchmark_id, name"})
 		}
+		run := newrun.Run
 
 		run.RefreshId()
 		run.RefreshCreated()
@@ -48,6 +52,21 @@ func NewHandler(app *execution.App) echo.HandlerFunc {
 				"Created", "Updated", "TriggeredAt", "Meta", "Vars",
 			); err != nil {
 			return c.JSON(500, map[string]string{"error": err.Error()})
+		}
+
+		var grafanaURL struct{ grafana_url string }
+		if err := app.PB.DB().
+			Select("grafana_url").
+			From("benchmarks").
+			Where(dbx.HashExp{"id": run.BenchmarkID}).
+			Row(&grafanaURL); err != nil {
+			log.Error().Err(err).Msg("error getting benchmark")
+		}
+
+		if newrun.GitHubPRLink != "" {
+			if err := app.GH.AddOrUpdateComment(c.Request().Context(), newrun.GitHubPRLink, gh.InProgressCommentString(grafanaURL.grafana_url)); err != nil {
+				return c.JSON(500, map[string]string{"error": err.Error()})
+			}
 		}
 
 		return c.JSON(201, run)
