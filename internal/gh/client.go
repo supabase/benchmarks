@@ -42,14 +42,16 @@ func (c *Client) GetPRLinkByID(id string) (string, error) {
 		Select().
 		Where(dbx.HashExp{"id": id}).
 		One(&pr); err != nil {
+		log.Error().Err(err).Msg("failed to get pr info")
 		return "", err
 	}
+	log.Info().Str("pr", *pr.PRLink).Msg("")
 	return *pr.PRLink, nil
 }
 
-func (c *Client) AddOrUpdateComment(ctx context.Context, prlink string, comment string) error {
+func (c *Client) AddOrUpdateComment(ctx context.Context, prlink string, comment string) (string, error) {
 	if c.client == nil {
-		return fmt.Errorf("GitHub client is not initialized correctly")
+		return "", fmt.Errorf("GitHub client is not initialized correctly")
 	}
 
 	pr := models.PR{
@@ -68,57 +70,58 @@ func (c *Client) AddOrUpdateComment(ctx context.Context, prlink string, comment 
 			pr.RefreshUpdated()
 			err := c.PB.DB().Model(&pr).Insert()
 			if err != nil {
-				return fmt.Errorf("error inserting pr: %w", err)
+				return "", fmt.Errorf("error inserting pr: %w", err)
 			}
 		} else {
-			return fmt.Errorf("error getting pr: %w", err)
+			return "", fmt.Errorf("error getting pr: %w", err)
 		}
 	}
 
 	owner, repo, prNumber, err := parsePRLink(prlink)
 	if err != nil {
-		return fmt.Errorf("error parsing PR link: %w", err)
+		return "", fmt.Errorf("error parsing PR link: %w", err)
 	}
 
+	pr.GHComment = &comment
 	if pr.GHCommentLink == nil {
-		prc, _, err := c.client.PullRequests.CreateComment(
+		prc, _, err := c.client.Issues.CreateComment(
 			ctx,
 			owner,
 			repo,
 			prNumber,
-			&github.PullRequestComment{
+			&github.IssueComment{
 				Body: github.String(*pr.GHComment),
 			},
 		)
 		if err != nil {
-			return fmt.Errorf("error creating PR comment: %w", err)
+			return "", fmt.Errorf("error creating PR comment: %w", err)
 		}
 		pr.GHCommentLink = prc.URL
 	} else {
 		commentID, err := parseCommentLink(*pr.GHCommentLink)
 		if err != nil {
-			return fmt.Errorf("error parsing comment link: %w", err)
+			return "", fmt.Errorf("error parsing comment link: %w", err)
 		}
-		_, _, err = c.client.PullRequests.EditComment(
+		_, _, err = c.client.Issues.EditComment(
 			ctx,
 			owner,
 			repo,
 			commentID,
-			&github.PullRequestComment{
+			&github.IssueComment{
 				Body: github.String(*pr.GHComment),
 			},
 		)
 		if err != nil {
-			return fmt.Errorf("error editing PR comment: %w", err)
+			return "", fmt.Errorf("error editing PR comment: %w", err)
 		}
 	}
 
 	pr.RefreshUpdated()
 	if err := c.PB.DB().Model(&pr).Update(); err != nil {
-		return fmt.Errorf("error updating PR in the database: %w", err)
+		return "", fmt.Errorf("error updating PR in the database: %w", err)
 	}
 
-	return nil
+	return pr.Id, nil
 }
 
 func parsePRLink(prlink string) (string, string, int, error) {
@@ -140,7 +143,8 @@ func parsePRLink(prlink string) (string, string, int, error) {
 }
 
 func parseCommentLink(commentlink string) (int64, error) {
-	// Example comment link: https://api.github.com/repos/octocat/Hello-World/pulls/comments/1
+	// Example comment link: https://api.github.com/repos/octocat/Hello-World/issues/comments/1
+	commentlink = strings.TrimPrefix(commentlink, "https://")
 	parts := strings.Split(commentlink, "/")
 	if len(parts) < 7 {
 		return 0, fmt.Errorf("invalid comment link format")

@@ -157,6 +157,12 @@ func (app *App) teardownBenchmarks() {
 			if err := app.PB.DB().Model(&run).Update("Status"); err != nil {
 				log.Error().Err(err).Msg("error updating run status to failed")
 			}
+
+			prLink, _, ok := getPRInfo(run, app)
+			if !ok {
+				return
+			}
+			app.GH.AddOrUpdateComment(context.TODO(), prLink, gh.SmthWentWrongCommentString())
 			return
 		}
 
@@ -164,6 +170,16 @@ func (app *App) teardownBenchmarks() {
 			started, ended := setStartedEnded(run)
 			run.StartedAt = &started
 			run.EndedAt = &ended
+
+			prLink, benchmarkRecord, ok := getPRInfo(run, app)
+			if ok {
+				if run.Output == nil {
+					output := ""
+					run.Output = &output
+				}
+				gurl := *benchmarkRecord.GrafanaURL + "&from=" + started + "&to=" + ended + "&var-testrun=" + run.Name
+				app.GH.AddOrUpdateComment(context.TODO(), prLink, gh.SuccessCommentString(gurl, *run.Output))
+			}
 		}
 
 		run.Status = "finished"
@@ -236,7 +252,7 @@ func getPRInfo(run models.Run, app *App) (string, models.Benchmark, bool) {
 
 	var benchmarkRecord models.Benchmark
 	if err := app.PB.DB().
-		Select("grafana_url").
+		Select().
 		Where(dbx.HashExp{"id": run.BenchmarkID}).
 		One(&benchmarkRecord); err != nil {
 		log.Warn().

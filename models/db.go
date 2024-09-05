@@ -20,7 +20,7 @@ type Run struct {
 	Raw         *string        `json:"raw" omitempty:"true"`
 	Comment     *string        `json:"comment" omitempty:"true"`
 	Vars        *string        `json:"vars" omitempty:"true"`
-	GitHubPRID  *string        `json:"github_pr_id" omitempty:"true"`
+	GitHubPRID  *string        `json:"github_pr_id" omitempty:"true" db:"github_pr_id"`
 }
 
 func (r Run) TableName() string {
@@ -41,9 +41,9 @@ func (s Secret) TableName() string {
 
 type PR struct {
 	models.BaseModel
-	PRLink        *string `json:"pr_link" omitempty:"true"`
-	GHComment     *string `json:"gh_comment" omitempty:"true"`
-	GHCommentLink *string `json:"gh_comment_link" omitempty:"true"`
+	PRLink        *string `json:"pr_link" omitempty:"true" db:"pr_link"`
+	GHComment     *string `json:"gh_comment" omitempty:"true" db:"gh_comment"`
+	GHCommentLink *string `json:"gh_comment_link" omitempty:"true" db:"gh_comment_link"`
 }
 
 func (p PR) TableName() string {

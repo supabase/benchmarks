@@ -54,7 +54,7 @@ func NewHandler(app *execution.App) echo.HandlerFunc {
 			return c.JSON(500, map[string]string{"error": err.Error()})
 		}
 
-		var grafanaURL struct{ grafana_url string }
+		var grafanaURL string
 		if err := app.PB.DB().
 			Select("grafana_url").
 			From("benchmarks").
@@ -64,8 +64,17 @@ func NewHandler(app *execution.App) echo.HandlerFunc {
 		}
 
 		if newrun.GitHubPRLink != "" {
-			if err := app.GH.AddOrUpdateComment(c.Request().Context(), newrun.GitHubPRLink, gh.InProgressCommentString(grafanaURL.grafana_url)); err != nil {
+			if prID, err := app.GH.AddOrUpdateComment(c.Request().Context(), newrun.GitHubPRLink, gh.InProgressCommentString(grafanaURL)); err != nil {
 				return c.JSON(500, map[string]string{"error": err.Error()})
+			} else {
+				run.RefreshUpdated()
+				run.GitHubPRID = &prID
+				if err := app.PB.DB().Model(&run).
+					Update(
+						"GitHubPRID", "Updated",
+					); err != nil {
+					return c.JSON(500, map[string]string{"error": err.Error()})
+				}
 			}
 		}
 
