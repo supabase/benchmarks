@@ -1,6 +1,8 @@
 module github.com/supabase/supabench
 
-go 1.18
+go 1.21
+
+toolchain go1.22.4
 
 require (
 	github.com/go-co-op/gocron v1.16.2
@@ -17,6 +19,7 @@ require (
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
+	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/klauspost/compress v1.15.5 // indirect
@@ -69,6 +72,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.4.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/google/go-github/v64 v64.0.0
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/google/wire v0.5.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.5.1 // indirect

@@ -1,6 +1,7 @@
 package execution
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"github.com/go-co-op/gocron"
 	"github.com/pocketbase/dbx"
 	"github.com/rs/zerolog/log"
+	"github.com/supabase/supabench/internal/gh"
 	"github.com/supabase/supabench/models"
 )
 
@@ -80,6 +82,20 @@ func (app *App) runBenchmarks() {
 		if err := app.PB.DB().Model(&run).Update("Status"); err != nil {
 			log.Error().Err(err).Msg("error updating run status to failed")
 		}
+
+		prLink, benchmarkRecord, ok := getPRInfo(run, app)
+		if !ok {
+			return
+		}
+
+		if run.Output == nil || *run.Output == "" {
+			app.GH.AddOrUpdateComment(context.TODO(), prLink, gh.SmthWentWrongCommentString())
+		} else {
+			started, ended := setStartedEnded(run)
+			gurl := *benchmarkRecord.GrafanaURL + "&from=" + started + "&to=" + ended + "&var-testrun=" + run.Name
+			app.GH.AddOrUpdateComment(context.TODO(), prLink, gh.FailureCommentString(gurl, *run.Output))
+		}
+
 		return
 	}
 
@@ -88,6 +104,19 @@ func (app *App) runBenchmarks() {
 		log.Error().Err(err).Msg("error updating run status to success")
 		return
 	}
+
+	prLink, benchmarkRecord, ok := getPRInfo(run, app)
+	if !ok {
+		return
+	}
+
+	if run.Output == nil {
+		output := ""
+		run.Output = &output
+	}
+	started, ended := setStartedEnded(run)
+	gurl := *benchmarkRecord.GrafanaURL + "&from=" + started + "&to=" + ended + "&var-testrun=" + run.Name
+	app.GH.AddOrUpdateComment(context.TODO(), prLink, gh.SuccessCommentString(gurl, *run.Output))
 }
 
 func (app *App) teardownBenchmarks() {
@@ -128,6 +157,12 @@ func (app *App) teardownBenchmarks() {
 			if err := app.PB.DB().Model(&run).Update("Status"); err != nil {
 				log.Error().Err(err).Msg("error updating run status to failed")
 			}
+
+			prLink, _, ok := getPRInfo(run, app)
+			if !ok {
+				return
+			}
+			app.GH.AddOrUpdateComment(context.TODO(), prLink, gh.SmthWentWrongCommentString())
 			return
 		}
 
@@ -135,6 +170,16 @@ func (app *App) teardownBenchmarks() {
 			started, ended := setStartedEnded(run)
 			run.StartedAt = &started
 			run.EndedAt = &ended
+
+			prLink, benchmarkRecord, ok := getPRInfo(run, app)
+			if ok {
+				if run.Output == nil {
+					output := ""
+					run.Output = &output
+				}
+				gurl := *benchmarkRecord.GrafanaURL + "&from=" + started + "&to=" + ended + "&var-testrun=" + run.Name
+				app.GH.AddOrUpdateComment(context.TODO(), prLink, gh.SuccessCommentString(gurl, *run.Output))
+			}
 		}
 
 		run.Status = "finished"
@@ -188,4 +233,34 @@ func setStartedEnded(run models.Run) (startedAt, endedAt string) {
 		startedAt = fmt.Sprintf("%d", now-int64(duration)-30*1000)
 	}
 	return startedAt, endedAt
+}
+
+func getPRInfo(run models.Run, app *App) (string, models.Benchmark, bool) {
+	if run.GitHubPRID == nil || *run.GitHubPRID == "" {
+		return "", models.Benchmark{}, false
+	}
+
+	prLink, err := app.GH.GetPRLinkByID(*run.GitHubPRID)
+	if err != nil {
+		log.Warn().
+			Str("benchmark_id", run.BenchmarkID).
+			Str("run_id", run.Id).
+			Str("name", run.Name).
+			Msg("Failed to get PR link")
+		return "", models.Benchmark{}, false
+	}
+
+	var benchmarkRecord models.Benchmark
+	if err := app.PB.DB().
+		Select().
+		Where(dbx.HashExp{"id": run.BenchmarkID}).
+		One(&benchmarkRecord); err != nil {
+		log.Warn().
+			Str("benchmark_id", run.BenchmarkID).
+			Str("run_id", run.Id).
+			Str("name", run.Name).
+			Msg("Failed to get Grafana URL")
+		return "", models.Benchmark{}, false
+	}
+	return prLink, benchmarkRecord, true
 }

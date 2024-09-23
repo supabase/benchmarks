@@ -12,6 +12,7 @@ import (
 
 	"github.com/pocketbase/pocketbase"
 	"github.com/supabase/supabench/internal/execution"
+	"github.com/supabase/supabench/internal/gh"
 	"github.com/supabase/supabench/internal/terraform"
 	_ "github.com/supabase/supabench/migrations"
 	"github.com/supabase/supabench/pipelines"
@@ -35,7 +36,8 @@ func main() {
 
 	tf := terraform.New(execPath)
 	pb := pocketbase.New()
-	app := execution.New(pb, tf)
+	gh := gh.New(pb)
+	app := execution.New(pb, tf, gh)
 
 	pipelines.InitRoutes(app)
 	pipelines.InitUI(app)

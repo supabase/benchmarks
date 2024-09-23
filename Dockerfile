@@ -1,5 +1,5 @@
 FROM flyio/flyctl:latest as flyio
-FROM golang:buster as builder
+FROM golang:bookworm as builder
 
 WORKDIR /builder
 
