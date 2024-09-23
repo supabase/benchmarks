@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Uppy Staging</title>
+    <link
+      href="https://releases.transloadit.com/uppy/v3.6.1/uppy.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="drag-drop-area"></div>
+
+    <script type="module">
+      import {
+        Uppy,
+        Dashboard,
+        Tus,
+      } from 'https://releases.transloadit.com/uppy/v3.6.1/uppy.min.mjs'
+
+      const token = ''
+      const projectId = 'proj'
+
+      const bucketName = 'tus'
+      const objectSuffix = 'staging/test-1'
+
+      const removeFingerprintOnSuccess = true
+      const supabaseStorageURL = `https://${projectId}.supabase.com/storage/v1/multi-part/`
+
+      var uppy = new Uppy()
+        .use(Dashboard, {
+          inline: true,
+          limit: 10,
+          target: '#drag-drop-area',
+          showProgressDetails: true,
+        })
+        .use(Tus, {
+          endpoint: supabaseStorageURL,
+          removeFingerprintOnSuccess: removeFingerprintOnSuccess,
+          headers: {
+            authorization: `Bearer ${token}`,
+            apikey: token,
+            'x-upsert': 'true',
+          },
+          uploadDataDuringCreation: false,
+          chunkSize: 6 * 1024 * 1024,
+          allowedMetaFields: [
+            'bucketName',
+            'objectName',
+            'contentType',
+            'cacheControl',
+          ],
+          onError: function (error) {
+            console.log('Failed because: ' + error)
+          },
+        })
+
+      uppy.on('file-added', (file) => {
+        const supabaseMetadata = {
+          bucketName: bucketName,
+          objectName: objectSuffix ? `${objectSuffix}/${file.name}` : file.name,
+          contentType: file.type,
+        }
+
+        file.meta = {
+          ...file.meta,
+          ...supabaseMetadata,
+        }
+
+        console.log('file added', file)
+      })
+
+      uppy.on('complete', (result) => {
+        console.log(
+          'Upload complete! We’ve uploaded these files:',
+          result.successful
+        )
+      })
+    </script>
+  </body>
+</html>

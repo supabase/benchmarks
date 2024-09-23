@@ -9,7 +9,7 @@ export { handleSummary } from './summary.js'
 const serviceToken = __ENV.SERVICE_TOKEN
 const baseUri = __ENV.BASE_URI
   ? __ENV.BASE_URI
-  : 'https://jjqwaskwktqjmyyuqrix.supabase.red'
+  : 'https://proj.supabase.com'
 const imageURI = __ENV.IMAGE_URI
   ? __ENV.IMAGE_URI
   : `${baseUri}/storage/v1/object/public/images/` // 3mb.jpg?time=
@@ -45,23 +45,7 @@ export default () => {
     apikey: serviceToken,
   }
 
-  // cp image to use for resize
   sleep(randomIntBetween(100, 5000) / 1000)
-  // const res = http.post(
-  //   `${storageUploadUri}/copy`,
-  //   JSON.stringify({
-  //     sourceKey: '3mb.jpg',
-  //     destinationKey: path,
-  //     bucketId: 'images',
-  //   }),
-  //   {
-  //     headers: Object.assign(headers, { 'Content-Type': 'application/json' }),
-  //   }
-  // )
-
-  // check(res, {
-  //   'upload is status 200': (r) => r.status === 200,
-  // })
 
   for (let i = 1; i <= requests; i++) {
     const getImage = http.get(`${imageURI}/${path}?time=${Date.now()}`, {
@@ -75,20 +59,4 @@ export default () => {
 
     sleep(randomIntBetween(100, 5000) / 1000)
   }
-
-  // const removeRes = http.del(
-  //   `${storageUploadUri}/images`,
-  //   JSON.stringify({
-  //     prefixes: [path],
-  //   }),
-  //   {
-  //     headers: {
-  //       authorization: `Bearer ${serviceToken}`,
-  //       apikey: serviceToken,
-  //       'Content-Type': 'application/json',
-  //     },
-  //   }
-  // )
-
-  // check(removeRes, { 'delete status is 200': (r) => r && r.status === 200 })
 }

@@ -18,7 +18,7 @@ const token = __ENV.ANON_TOKEN
 const serviceToken = __ENV.SERVICE_TOKEN
 const baseUri = __ENV.BASE_URI
   ? __ENV.BASE_URI
-  : 'https://jjqwaskwktqjmyyuqrix.supabase.red'
+  : 'https://proj.supabase.com'
 const authURI = __ENV.AUTH_URI ? __ENV.AUTH_URI : baseUri + '/auth/v1'
 const imageResizerURI = __ENV.IMAGE_RESIZER_URI
   ? __ENV.IMAGE_RESIZER_URI
