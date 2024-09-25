@@ -10,7 +10,7 @@ const pgDB = __ENV.PG_DB ? __ENV.PG_DB : 'postgres'
 const pgPort = __ENV.PG_PORT ? __ENV.PG_PORT : '5432'
 const pgHost = __ENV.PG_HOST
   ? __ENV.PG_HOST
-  : 'db.woopuegececriuknbjus.supabase.red'
+  : 'db.proj.supabase.com'
 const pdConnectionString = `postgres://${pgUser}:${pgPass}@${pgHost}:${pgPort}/${pgDB}?sslmode=disable`
 const db = sql.open('postgres', pdConnectionString)
 
@@ -75,5 +75,5 @@ export default () => {
   )
   const finish = new Date()
   counterInserts.add(1)
-  sleep(((virtualUsers - rand) / rate - (finish - start) / 1000) * 60)
+  sleep(((virtualUsers - rand) / rate) * 60 - (finish - start) / 1000)
 }
