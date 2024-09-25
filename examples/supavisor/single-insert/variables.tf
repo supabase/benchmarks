@@ -111,7 +111,7 @@ variable "private_key_location" {
 variable "sut_name" {
   description = "Name of the system under test"
   type        = string
-  default     = "image_proxy"
+  default     = "supavisor"
 }
 
 # Leave these variables as is. They will be passed by Supabench. 
