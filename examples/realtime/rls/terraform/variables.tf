@@ -30,6 +30,12 @@ variable "supabench_uri" {
   type        = string
 }
 
+variable "instances_count" {
+  description = "Number of EC2 instances (should be even)"
+  type        = number
+  default     = 8
+}
+
 variable "ec2_name" {
   description = "Name of ec2 loader instance"
   type        = string
@@ -128,4 +134,10 @@ variable "app_name" {
 variable "fly_access_token" {
   description = "Fly access token"
   type        = string
+}
+
+variable "app_nodes_count" {
+  description = "Count of fly app nodes"
+  type        = string
+  default     = 6
 }

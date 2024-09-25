@@ -1,4 +1,6 @@
 resource "aws_instance" "k6" {
+  count = var.instances_count
+
   ami                    = var.ami_id
   instance_type          = var.instance_type
   vpc_security_group_ids = [var.security_group_id]
@@ -15,10 +17,12 @@ resource "aws_instance" "k6" {
 }
 
 resource "null_resource" "remote" {
+  count = var.instances_count
+
   connection {
     type        = "ssh"
     user        = var.instance_user
-    host        = aws_instance.k6.public_ip
+    host        = aws_instance.k6[count.index].public_ip
     private_key = var.private_key_location
     timeout     = "1m"
   }
@@ -49,6 +53,7 @@ resource "null_resource" "remote" {
         duration        = var.duration
         rooms           = var.rooms
         testrun_name    = var.testrun_name
+        make_command    = count.index == 0 ? "db_test" : "subs"
       }
     )
   }

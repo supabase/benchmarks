@@ -8,15 +8,7 @@ terraform {
 }
 
 provider "aws" {
-  region = "eu-central-1"
-}
-
-module "setup_infra" {
-  source = "./modules/setup"
-
-  app_name         = var.app_name
-  fly_access_token = var.fly_access_token
-  app_nodes_count  = var.app_nodes_count
+  region = "ap-southeast-1"
 }
 
 module "script" {
@@ -40,13 +32,11 @@ module "script" {
 
   rate     = var.rate
   conns    = var.conns
+  rooms    = var.rooms
   duration = var.duration
   pg_pass  = var.pg_pass
   pg_host  = var.pg_host
   mp_token = var.mp_token
   mp_uri   = var.mp_uri
-
-  depends_on = [
-    module.setup_infra.ready,
-  ]
+  auth_uri = var.auth_uri
 }

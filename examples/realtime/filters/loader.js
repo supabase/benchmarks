@@ -4,24 +4,18 @@ import { Counter } from 'k6/metrics'
 
 import { getRandomInt } from './common.js'
 
-const domains = [
-  'supabase.com',
-  'supabase.io',
-  'supabase.net',
-  'supabase.co',
-  'example.com',
-]
 const pgUser = __ENV.PG_USER ? __ENV.PG_USER : 'postgres'
 const pgPass = __ENV.PG_PASS
 const pgDB = __ENV.PG_DB ? __ENV.PG_DB : 'postgres'
-const pgPort = __ENV.PG_PORT ? __ENV.PG_PORT : '6543'
+const pgPort = __ENV.PG_PORT ? __ENV.PG_PORT : '5432'
 const pgHost = __ENV.PG_HOST
   ? __ENV.PG_HOST
   : 'db.proj.supabase.com'
-const pdConnectionString = `postgresql://${pgUser}:${pgPass}@${pgHost}:${pgPort}/${pgDB}?sslmode=disable`
+const pdConnectionString = `postgres://${pgUser}:${pgPass}@${pgHost}:${pgPort}/${pgDB}?sslmode=disable`
 const db = sql.open('postgres', pdConnectionString)
 
-const rate = __ENV.RATE ? parseFloat(__ENV.RATE) : 1
+const rate = __ENV.RATE ? __ENV.RATE : 2
+const rooms = __ENV.ROOMS ? __ENV.ROOMS : 10
 
 const counterInserts = new Counter('inserts')
 const baseDuration = __ENV.DURATION ? __ENV.DURATION : 60
@@ -42,6 +36,19 @@ export const options = {
 }
 
 /**
+ * Create a table called "mp_latency" for testing if it doesn't exist,
+ * and if it does exist, do nothing
+ */
+export function setup() {
+  db.exec(`create table if not exists "load_messages" (
+    id bigserial primary key,
+    created_at timestamptz default now() NOT NULL,
+    data text,
+    room_id varchar(255) default 'room0'
+  );`)
+}
+
+/**
  * Close the database connection
  */
 export function teardown() {
@@ -57,9 +64,10 @@ export default () => {
   // send inserts to the database
   const start = new Date()
   db.exec(
-    `insert into rls_messages_authenticated (domain) values ('${
-      domains[getRandomInt(0, 5)]
-    }');`
+    `insert into load_messages(room_id) values('room${getRandomInt(
+      0,
+      rooms
+    )}');`
   )
   const finish = new Date()
   counterInserts.add(1)

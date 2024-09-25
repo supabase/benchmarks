@@ -31,15 +31,32 @@ export function scenario(baseDuration, conns) {
     startVUs: 0,
     stages: [
       {
-        duration: `${(5 * parseInt(baseDuration)) / 6}s`,
+        duration: `${parseInt(baseDuration) / 12}s`,
+        target: parseInt(conns) / 2,
+      },
+      {
+        duration: `${(3 * parseInt(baseDuration)) / 12}s`,
+        target: parseInt(conns) / 2,
+      },
+      {
+        duration: `${parseInt(baseDuration) / 12}s`,
+        target: parseInt(conns) / 4,
+      },
+      {
+        duration: `${(2 * parseInt(baseDuration)) / 12}s`,
         target: parseInt(conns),
       },
       {
-        duration: `${parseInt(baseDuration) / 6}s`,
+        duration: `${(4 * parseInt(baseDuration)) / 12}s`,
         target: parseInt(conns),
       },
+      {
+        duration: `${parseInt(baseDuration) / 12}s`,
+        target: parseInt(conns) / 4,
+      },
+      { duration: `10s`, target: 0 },
     ],
-    gracefulRampDown: '20s',
+    gracefulRampDown: '5s',
   }
 }
 

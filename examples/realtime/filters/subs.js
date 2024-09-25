@@ -1,24 +1,14 @@
 import { check } from 'k6'
-import http from 'k6/http'
 import ws from 'k6/ws'
-import { SharedArray } from 'k6/data'
 import { Trend, Counter } from 'k6/metrics'
-import { scenario } from 'k6/execution'
 
-import { getRandomInt, scenario as sc, trends } from './common.js'
+import { getRandomInt, scenario, trends } from './common.js'
 export { handleSummary } from './summary.js'
 
-const users = new SharedArray('users', function () {
-  return JSON.parse(open('./users.json'))
-})
-
 const token = __ENV.MP_TOKEN
-const authURI = __ENV.AUTH_URI
-  ? __ENV.AUTH_URI
-  : 'https://proj.supabase.com/auth/v1'
 const socketURI = __ENV.MP_URI
   ? __ENV.MP_URI
-  : 'wss://proj.realtime.dev/socket/websocket'
+  : 'wss://proj.supabase.com/realtime/v1/websocket'
 const URL = `${socketURI}?log_level=info&apikey=${token}`
 
 const conns = __ENV.CONNS
@@ -26,7 +16,7 @@ const baseDuration = __ENV.DURATION ? __ENV.DURATION : 60
 const duration = parseInt(baseDuration) + 15
 
 const rooms = []
-rooms.push(`room${getRandomInt(0, __ENV.ROOMS)}`)
+rooms.push(`room${getRandomInt(0, __ENV.ROOMS ? __ENV.ROOMS : 10)}`)
 
 const randomRoom = `fGwer43Fge${Math.random().toString(36).slice(2)}`
 
@@ -40,16 +30,11 @@ export const options = {
   thresholds: to,
   summaryTrendStats: trends,
   scenarios: {
-    rls_authenticated: sc(baseDuration, conns),
+    replication: scenario(baseDuration, conns),
   },
 }
 
 export default () => {
-  const user = users[scenario.iterationInTest % users.length]
-  const authToken = getUserToken(user)
-  // const authToken = token
-  const domain = user.email.substring(user.email.indexOf('@') + 1)
-
   const res = ws.connect(URL, {}, (socket) => {
     socket.on('open', () => {
       // Join channel
@@ -66,7 +51,6 @@ export default () => {
                 key: '',
               },
               postgres_changes: [],
-              access_token: authToken,
             },
           },
           ref: '1',
@@ -84,10 +68,10 @@ export default () => {
                   {
                     event: 'INSERT',
                     schema: 'public',
-                    table: 'rls_messages_authenticated',
+                    table: 'load_messages',
+                    filter: `room_id=eq.${room}`,
                   },
                 ],
-                access_token: authToken,
               },
             },
             ref: '2',
@@ -100,7 +84,7 @@ export default () => {
           topic: `realtime:${randomRoom}`,
           event: 'access_token',
           payload: {
-            access_token: authToken,
+            access_token: token,
           },
           ref: '3',
         })
@@ -111,7 +95,7 @@ export default () => {
             topic: `realtime:any`,
             event: 'access_token',
             payload: {
-              access_token: authToken,
+              access_token: token,
             },
             ref: '4',
           })
@@ -133,9 +117,9 @@ export default () => {
 
     socket.on('message', (msg) => {
       const now = Date.now()
-      // console.log('----------------')
-      // console.log(msg)
-      // console.log('----------------')
+      console.log('----------------')
+      console.log(msg)
+      console.log('----------------')
       msg = JSON.parse(msg)
 
       if (msg.event === 'system') {
@@ -177,28 +161,4 @@ export default () => {
   })
 
   check(res, { 'status is 101': (r) => r && r.status === 101 })
-}
-
-function getUserToken(user) {
-  // register a new user and authenticate via a Bearer token
-  const loginRes = http.post(
-    `${authURI}/token?grant_type=password`,
-    JSON.stringify({
-      email: user.email,
-      password: user.password,
-    }),
-    {
-      headers: {
-        apikey: token,
-        'Content-Type': 'application/json',
-      },
-    }
-  )
-
-  const authToken = loginRes.json('access_token')
-  check(authToken, {
-    'logged in successfully': () => loginRes.status === 200 && authToken,
-  })
-
-  return authToken.toString()
 }

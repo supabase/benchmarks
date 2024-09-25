@@ -1,13 +1,45 @@
-variable "ec2_name" {
-  description = "Name of ec2 loader instance"
+variable "testrun_name" {
+  description = "Name of the testrun"
   type        = string
-  default     = "supaloader" # run ID
+}
+
+variable "testrun_id" {
+  description = "ID of the testrun"
+  type        = string
+}
+
+variable "test_origin" {
+  description = "Origin of the test"
+  type        = string
+  default     = ""
+}
+
+variable "benchmark_id" {
+  description = "ID of the benchmark"
+  type        = string
+}
+
+variable "supabench_token" {
+  description = "Token to access the supabench"
+  type        = string
+  sensitive   = true
+}
+
+variable "supabench_uri" {
+  description = "URI of the supabench server"
+  type        = string
 }
 
 variable "instances_count" {
   description = "Number of EC2 instances (should be even)"
   type        = number
   default     = 8
+}
+
+variable "ec2_name" {
+  description = "Name of ec2 loader instance"
+  type        = string
+  default     = "supaloader" # run ID
 }
 
 variable "instance_type" {
@@ -96,36 +128,28 @@ variable "mp_token" {
 variable "mp_uri" {
   description = "Multiplayer realtime api uri"
   type        = string
-  default     = "wss://woopuegececriuknbjus.realtime-qa.abc3.dev/socket/websocket"
+  default     = "wss://proj.supabase.com/realtime/v1/websocket"
 }
 
-variable "testrun_name" {
-  description = "Name of the testrun"
+variable "auth_uri" {
+  description = "auth api uri"
+  type        = string
+  default     = "https://proj.supabase.com/auth/v1"
+}
+
+variable "app_name" {
+  description = "Name of fly app"
+  type        = string
+  default     = "realtime-qa" # fly app name
+}
+
+variable "fly_access_token" {
+  description = "Fly access token"
   type        = string
 }
 
-variable "testrun_id" {
-  description = "ID of the testrun"
+variable "app_nodes_count" {
+  description = "Count of fly app nodes"
   type        = string
-}
-
-variable "test_origin" {
-  description = "Origin of the test"
-  type        = string
-  default     = ""
-}
-
-variable "benchmark_id" {
-  description = "ID of the benchmark"
-  type        = string
-}
-
-variable "supabench_token" {
-  description = "Token to access the reports"
-  type        = string
-}
-
-variable "supabench_uri" {
-  description = "URI of the supabench server"
-  type        = string
+  default     = 6
 }

@@ -85,7 +85,7 @@ variable "pg_pass" {
 variable "pg_host" {
   description = "Postgres instance host"
   type        = string
-  default     = "db.woopuegececriuknbjus.supabase.net"
+  default     = "db.proj.supabase.com"
 }
 
 variable "mp_token" {
@@ -96,7 +96,13 @@ variable "mp_token" {
 variable "mp_uri" {
   description = "Multiplayer realtime api uri"
   type        = string
-  default     = "wss://woopuegececriuknbjus.realtime-qa.abc3.dev/socket/websocket"
+  default     = "wss://proj.supabase.com/realtime/v1/websocket"
+}
+
+variable "auth_uri" {
+  description = "auth api uri"
+  type        = string
+  default     = "https://proj.supabase.com/auth/v1"
 }
 
 variable "testrun_name" {

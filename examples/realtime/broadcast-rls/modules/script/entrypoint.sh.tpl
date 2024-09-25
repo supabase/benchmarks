@@ -24,7 +24,9 @@ export PG_PASS="${pg_pass}"
 export PG_HOST="${pg_host}"
 export MP_TOKEN="${mp_token}"
 export MP_URI="${mp_uri}"
+export AUTH_URI="${auth_uri}"
+export INSTANCES="${instances}"
 
 make ${make_command} \
-  rate="${rate}" conns="${conns}" duration="${duration}" rooms="${rooms}" \
+  rate="${rate}" conns="${conns}" duration="${duration}" rooms="${rooms}" shift="${shift}" \
   testrun="${testrun_name}"
