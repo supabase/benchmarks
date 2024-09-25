@@ -15,7 +15,7 @@ variable "service_token" {
 variable "base_uri" {
   description = "base_uri - supabase project base uri"
   type        = string
-  default     = "https://proj.supabase.com"
+  default     = "https://proj.supabase.red"
 }
 variable "conns" {
   description = "conns - number of virtual users"
@@ -24,11 +24,6 @@ variable "conns" {
 }
 variable "requests" {
   description = "requests - number of requests per virtual user"
-  type        = string
-  default     = "10"
-}
-variable "rampscount" {
-  description = "rampscount - number of stages with ramping vus and holding them for a duration"
   type        = string
   default     = "10"
 }
@@ -42,6 +37,13 @@ variable "consecutiveduration" {
   type        = string
   default     = "60"
 }
+variable "rampscount" {
+  description = "rampscount - number of stages with ramping vus and holding them for a duration"
+  type        = string
+  default     = "10"
+}
+
+# Some variables required to setup the SUT.
 
 # Some variables that you can reuse.
 
@@ -69,16 +71,19 @@ variable "instances_count" {
 variable "ami_id" {
   description = "AMI to use for ec2 loader instance"
   type        = string
+  default     = ""
 }
 
 variable "security_group_id" {
   description = "Security group to use for ec2 loader instance"
   type        = string
+  default     = ""
 }
 
 variable "subnet_id" {
   description = "Subnet to use for ec2 loader instance"
   type        = string
+  default     = ""
 }
 
 variable "instance_user" {
@@ -90,6 +95,7 @@ variable "instance_user" {
 variable "key_name" {
   description = "The instance key"
   type        = string
+  default     = "egor-dev"
 }
 
 variable "private_key_location" {
@@ -97,10 +103,15 @@ variable "private_key_location" {
   type        = string
 }
 
+# variable "private_key_location" {
+#   description = "Location of your private key to SSH into the instance"
+#   type        = string
+# }
+
 variable "sut_name" {
   description = "Name of the system under test"
   type        = string
-  default     = "supavisor"
+  default     = "image_proxy"
 }
 
 # Leave these variables as is. They will be passed by Supabench. 
@@ -109,11 +120,13 @@ variable "sut_name" {
 variable "testrun_name" {
   description = "Name of the testrun"
   type        = string
+  default     = ""
 }
 
 variable "testrun_id" {
   description = "ID of the testrun"
   type        = string
+  default     = ""
 }
 
 variable "test_origin" {
@@ -125,15 +138,24 @@ variable "test_origin" {
 variable "benchmark_id" {
   description = "ID of the benchmark"
   type        = string
+  default     = ""
 }
 
 variable "supabench_token" {
   description = "Token to access the supabench"
   type        = string
+  default     = ""
   sensitive   = true
 }
 
 variable "supabench_uri" {
   description = "URI of the supabench server"
   type        = string
+  default     = ""
+}
+
+variable "fly_access_token" {
+  description = "Fly access token"
+  type        = string
+  default     = ""
 }

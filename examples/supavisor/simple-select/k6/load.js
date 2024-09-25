@@ -43,7 +43,7 @@ export const options = {
 
 // const pgConnectionStrings = JSON.parse(pgConnectionStringsRaw)
 const pgConnectionStrings = JSON.parse(
-  '["postgresql://postgres._tenant_:_password_@_address_:7654/postgres?sslmode=disable","postgresql://postgres._tenant_:_password_@_address2_:7654/postgres?sslmode=disable"]'
+  '["postgresql://postgres.tenant:pass@host:port/postgres?sslmode=disable","postgresql://postgres.tenant:password@host:port/postgres?sslmode=disable"]'
 )
 
 let timeslot = 1000
