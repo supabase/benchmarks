@@ -15,7 +15,7 @@ variable "service_token" {
 variable "base_uri" {
   description = "base_uri - supabase project base uri"
   type        = string
-  default     = "https://proj.supabase.com"
+  default     = "https://proj.supabase.red"
 }
 variable "conns" {
   description = "conns - number of virtual users"
