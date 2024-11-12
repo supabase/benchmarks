@@ -69,7 +69,7 @@ require (
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/ganigeorgiev/fexpr v0.1.1 // indirect
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0 // indirect
-	github.com/golang-jwt/jwt/v4 v4.4.2 // indirect
+	github.com/golang-jwt/jwt/v4 v4.5.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-github/v64 v64.0.0
