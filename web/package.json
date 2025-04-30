@@ -29,7 +29,7 @@
     "svelte": "^4.2.19",
     "svelte-flatpickr": "^3.2.6",
     "svelte-spa-router": "^3.2.0",
-    "vite": "^6.2.6"
+    "vite": "^6.3.4"
   },
   "dependencies": {
     "jsonpath-plus": "^10.3.0"
