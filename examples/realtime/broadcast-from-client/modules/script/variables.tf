@@ -53,12 +53,6 @@ variable "sut_name" {
   default     = ""
 }
 
-variable "rate" {
-  description = "Rate of the system under test"
-  type        = string
-  default     = "1"
-}
-
 variable "conns" {
   description = "Number of connections to the system under test"
   type        = string
@@ -73,12 +67,6 @@ variable "messages_per_second" {
 
 variable "message_size_kb" {
   description = "Message size in KB"
-  type        = string
-  default     = "1"
-}
-
-variable "rooms" {
-  description = "Number of realtime rooms"
   type        = string
   default     = "1"
 }

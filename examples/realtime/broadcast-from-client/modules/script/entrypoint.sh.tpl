@@ -29,6 +29,6 @@ export INSTANCES="${instances}"
 export PRESENCE_ENABLED="${presence_enabled ? "true" : "false"}"
 
 make ${make_command} \
-  rate="${rate}" conns="${conns}" duration="${duration}" rooms="${rooms}" shift="${shift}" \
+  conns="${conns}" duration="${duration}" shift="${shift}" \
   messages_per_second="${messages_per_second}" message_size_kb="${message_size_kb}" \
   testrun="${testrun_name}"

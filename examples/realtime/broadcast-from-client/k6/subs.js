@@ -29,18 +29,12 @@ const messagesPerSecond = __ENV.MESSAGES_PER_SECOND
 const messageSizeKB = __ENV.MESSAGE_SIZE_KB
   ? parseInt(__ENV.MESSAGE_SIZE_KB)
   : 1;
-const roomNumber = __ENV.ROOMS ? parseInt(__ENV.ROOMS) : 1;
 const baseDuration = __ENV.DURATION ? __ENV.DURATION : 60;
 const duration = parseInt(baseDuration) + 30;
 const presenceEnabled = __ENV.PRESENCE_ENABLED === "true" || __ENV.PRESENCE_ENABLED === "1";
 
 const messagesPerSecondPerConnection = messagesPerSecond / conns;
 const broadcastInterval = 1000;
-
-const rooms = [];
-for (let i = 0; i < roomNumber; i++) {
-  rooms.push(`channel_${i}`);
-}
 
 const latencyTrend = new Trend("latency_trend");
 const counterReceived = new Counter("received_updates");
@@ -70,7 +64,9 @@ export default () => {
       },
     }
   );
+  console.log(`Request params: URI=${authURI.replace("auth", "rest") + "/channel_names?select=name"}, apikey=${token}, authToken=${authToken}, user=${user.email}`);
   const channels = channelsResponse.json().map((c) => c.name);
+  console.log(`Subscribed channels: ${channels}`);
   // console.log(JSON.stringify(channels));
   const URL = `${socketURI}?apikey=${token}`;
   const res = ws.connect(URL, {}, (socket) => {
@@ -80,7 +76,7 @@ export default () => {
         const presenceConfig = presenceEnabled
           ? { key: "" }
           : { enabled: false };
-        
+        console.log(`Joining room: ${room}`);
         socket.send(
           JSON.stringify({
             topic: `realtime:${room}`,
@@ -145,6 +141,7 @@ export default () => {
 
         for (let i = 0; i < messagesToSend; i++) {
           const randomChannel = channels[getRandomInt(0, channels.length)];
+          console.log(`Sending message to channel: ${randomChannel}`);
           socket.send(
             JSON.stringify({
               topic: `realtime:${randomChannel}`,
@@ -198,7 +195,7 @@ export default () => {
       if (msg.payload.payload) {
         updated = msg.payload.payload.created_at;
       }
-
+      console.log(`Message received: ${JSON.stringify(msg)}`);
       latencyTrend.add(now - updated, { type: type });
       counterReceived.add(1);
 

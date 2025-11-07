@@ -30,9 +30,7 @@ module "script" {
   supabench_token = var.supabench_token
   supabench_uri   = var.supabench_uri
 
-  rate                = var.rate
   conns               = var.conns
-  rooms               = var.rooms
   duration            = var.duration
   messages_per_second = var.messages_per_second
   message_size_kb     = var.message_size_kb

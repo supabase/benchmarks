@@ -119,14 +119,12 @@ resource "null_resource" "remote" {
         mp_token           = var.mp_token
         mp_uri             = var.mp_uri
         auth_uri           = var.auth_uri
-        rate               = var.rate
         conns              = var.conns
         messages_per_second = var.messages_per_second
         message_size_kb    = var.message_size_kb
         shift              = 5000 * count.index
         instances          = var.instances_count
         duration           = var.duration
-        rooms              = var.rooms
         make_command       = count.index == 0 ? "db_test" : "subs"
 
         # don't change these
