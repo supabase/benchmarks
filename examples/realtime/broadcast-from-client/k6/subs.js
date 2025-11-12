@@ -63,66 +63,72 @@ export default () => {
 
   const channels = channelsResponse.json().map((c) => c.name);
   const URL = `${socketURI}?apikey=${token}`;
+  const joinedChannels = new Set();
+  let broadcastIntervalId = null;
+
   const res = ws.connect(URL, {}, (socket) => {
     socket.on("open", () => {
-      // Join channels
       channels.map((room) =>
         socket.send(createJoinMessage(room, authToken, presenceEnabled))
       );
-      // Send access tokens
       channels.map((room) =>
         socket.send(createAccessTokenMessage(room, authToken))
       );
 
-      // Send heartbeat
       socket.setInterval(
         () => socket.send(createHeartbeatMessage()),
         25 * 1000
       );
-
-      socket.setInterval(() => {
-        const messagesToSend = Math.ceil(messagesPerSecond);
-
-        const sendMessage = (index) => {
-          let rand = 0;
-          if (messagesToSend > 1) {
-            rand = getRandomInt(0, messagesToSend);
-          }
-
-          const start = Date.now();
-          const randomChannel = channels[getRandomInt(0, channels.length)];
-          socket.send(createBroadcastMessage(randomChannel, createMessage()));
-          const finish = Date.now();
-
-          const sleepTime =
-            ((messagesToSend - rand) / messagesToSend) *
-              (broadcastInterval / 1000) -
-            (finish - start) / 1000;
-
-          if (index + 1 < messagesToSend) {
-            if (sleepTime > 0) {
-              socket.setTimeout(() => sendMessage(index + 1), sleepTime * 1000);
-            } else {
-              sendMessage(index + 1);
-            }
-          }
-        };
-
-        if (messagesToSend > 0) {
-          sendMessage(0);
-        }
-      }, broadcastInterval);
     });
 
     socket.on("message", (msg) => {
       const now = Date.now();
       msg = JSON.parse(msg);
 
-      if (msg.event === "system") {
+      if (msg.event === "phx_reply" && msg.payload && msg.payload.status === "ok") {
+        const channelName = msg.topic.replace("realtime:", "");
+        joinedChannels.add(channelName);
+        console.log(`Successfully joined channel: ${channelName} (${joinedChannels.size}/${channels.length})`);
+
         check(msg, {
-          "subscribed to realtime": (msg) =>
-            (msg.topic === msg.payload.status) === "ok",
+          "subscribed to realtime": (msg) => msg.payload.status === "ok",
         });
+
+        if (joinedChannels.size === channels.length && !broadcastIntervalId) {
+          console.log("All channels joined, starting broadcast");
+          broadcastIntervalId = socket.setInterval(() => {
+            const messagesToSend = Math.ceil(messagesPerSecond);
+
+            const sendMessage = (index) => {
+              let rand = 0;
+              if (messagesToSend > 1) {
+                rand = getRandomInt(0, messagesToSend);
+              }
+
+              const start = Date.now();
+              const randomChannel = channels[getRandomInt(0, channels.length)];
+              socket.send(createBroadcastMessage(randomChannel, createMessage()));
+              const finish = Date.now();
+
+              const sleepTime =
+                ((messagesToSend - rand) / messagesToSend) *
+                  (broadcastInterval / 1000) -
+                (finish - start) / 1000;
+
+              if (index + 1 < messagesToSend) {
+                if (sleepTime > 0) {
+                  socket.setTimeout(() => sendMessage(index + 1), sleepTime * 1000);
+                } else {
+                  sendMessage(index + 1);
+                }
+              }
+            };
+
+            if (messagesToSend > 0) {
+              sendMessage(0);
+            }
+          }, broadcastInterval);
+        }
       }
 
       if (msg.event !== "broadcast") {
@@ -187,7 +193,7 @@ function createJoinMessage(room, authToken, presenceEnabled) {
     payload: {
       config: {
         broadcast: {
-          self: true,
+          self: false,
         },
         presence: presenceConfig,
         private: true,
