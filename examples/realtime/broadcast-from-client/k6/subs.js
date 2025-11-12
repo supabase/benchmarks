@@ -33,7 +33,7 @@ const baseDuration = __ENV.DURATION ? __ENV.DURATION : 60;
 const duration = parseInt(baseDuration) + 30;
 const presenceEnabled =
   __ENV.PRESENCE_ENABLED === "true" || __ENV.PRESENCE_ENABLED === "1";
-const broadcastInterval = 500;
+const broadcastInterval = 1000;
 const latencyTrend = new Trend("latency_trend");
 const counterReceived = new Counter("received_updates");
 
