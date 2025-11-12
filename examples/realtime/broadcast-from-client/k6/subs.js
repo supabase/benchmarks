@@ -36,6 +36,7 @@ const presenceEnabled =
 const broadcastInterval = 1000;
 const latencyTrend = new Trend("latency_trend");
 const counterReceived = new Counter("received_updates");
+const messageSizeBytes = messageSizeKB * 1024;
 
 const to = {};
 
@@ -51,133 +52,70 @@ export const options = {
 export default () => {
   const user = users[(scenario.iterationInTest + shift) % users.length];
   const authToken = getUserToken(user);
-
+  const headers = {
+    Authorization: `Bearer ${authToken}`,
+    apikey: token,
+  };
   const channelsResponse = http.get(
     `${authURI.replace("auth", "rest")}/channel_names?select=name`,
-    {
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-        apikey: token,
-      },
-    }
+    { headers }
   );
-  console.log(
-    `Request params: URI=${
-      authURI.replace("auth", "rest") + "/channel_names?select=name"
-    }, apikey=${token}, authToken=${authToken}, user=${user.email}`
-  );
+
   const channels = channelsResponse.json().map((c) => c.name);
-  console.log(`Subscribed channels: ${channels}`);
-  // console.log(JSON.stringify(channels));
   const URL = `${socketURI}?apikey=${token}`;
   const res = ws.connect(URL, {}, (socket) => {
     socket.on("open", () => {
-      // Join channel
-      channels.map((room) => {
-        const presenceConfig = presenceEnabled
-          ? { key: "" }
-          : { enabled: false };
-        console.log(`Joining room: ${room}`);
-        socket.send(
-          JSON.stringify({
-            topic: `realtime:${room}`,
-            event: "phx_join",
-            payload: {
-              config: {
-                broadcast: {
-                  self: true,
-                },
-                presence: presenceConfig,
-                private: true,
-              },
-              access_token: authToken,
-            },
-            ref: "1",
-            join_ref: "1",
-          })
-        );
-      });
-      channels.map((room) => {
-        socket.send(
-          JSON.stringify({
-            topic: `realtime:${room}`,
-            event: "access_token",
-            payload: {
-              access_token: authToken,
-            },
-            ref: "2",
-          })
-        );
-      });
+      // Join channels
+      channels.map((room) =>
+        socket.send(createJoinMessage(room, authToken, presenceEnabled))
+      );
+      // Send access tokens
+      channels.map((room) =>
+        socket.send(createAccessTokenMessage(room, authToken))
+      );
+
+      // Send heartbeat
+      socket.setInterval(
+        () => socket.send(createHeartbeatMessage()),
+        25 * 1000
+      );
 
       socket.setInterval(() => {
-        // Send heartbeat to server (timeout is probably around 1m)
-        socket.send(
-          JSON.stringify({
-            topic: "phoenix",
-            event: "heartbeat",
-            payload: {},
-            ref: 0,
-          })
-        );
-      }, 25 * 1000);
+        const messagesToSend = Math.ceil(messagesPerSecond);
 
-      socket.setInterval(() => {
-        const messageSizeBytes = messageSizeKB * 1024;
-        const message = () => {
-          const jsonOverhead = 50;
-          const messageContentSize = Math.max(
-            0,
-            messageSizeBytes - jsonOverhead
-          );
-          const payload = {
-            created_at: Date.now(),
-            message: randomBytes(messageContentSize),
-          };
-          return payload;
+        const sendMessage = (index) => {
+          let rand = 0;
+          if (messagesToSend > 1) {
+            rand = getRandomInt(0, messagesToSend);
+          }
+
+          const start = Date.now();
+          const randomChannel = channels[getRandomInt(0, channels.length)];
+          socket.send(createBroadcastMessage(randomChannel, createMessage()));
+          const finish = Date.now();
+
+          const sleepTime =
+            ((messagesToSend - rand) / messagesToSend) *
+              (broadcastInterval / 1000) -
+            (finish - start) / 1000;
+
+          if (index + 1 < messagesToSend) {
+            if (sleepTime > 0) {
+              socket.setTimeout(() => sendMessage(index + 1), sleepTime * 1000);
+            } else {
+              sendMessage(index + 1);
+            }
+          }
         };
 
-        const messagesToSend = Math.floor(messagesPerSecond);
-        const fractionalPart = messagesPerSecond - messagesToSend;
-
-        for (let i = 0; i < messagesToSend; i++) {
-          const randomChannel = channels[getRandomInt(0, channels.length)];
-          console.log(`Sending message to channel: ${randomChannel}`);
-          socket.send(
-            JSON.stringify({
-              topic: `realtime:${randomChannel}`,
-              event: "broadcast",
-              payload: {
-                event: "new message",
-                payload: message(),
-              },
-              ref: 0,
-            })
-          );
-        }
-
-        if (Math.random() < fractionalPart && channels.length > 0) {
-          const randomChannel = channels[getRandomInt(0, channels.length)];
-          socket.send(
-            JSON.stringify({
-              topic: `realtime:${randomChannel}`,
-              event: "broadcast",
-              payload: {
-                event: "new message",
-                payload: message(),
-              },
-              ref: 0,
-            })
-          );
+        if (messagesToSend > 0) {
+          sendMessage(0);
         }
       }, broadcastInterval);
     });
 
     socket.on("message", (msg) => {
       const now = Date.now();
-      // console.log("----------------");
-      // console.log(msg);
-      // console.log("----------------");
       msg = JSON.parse(msg);
 
       if (msg.event === "system") {
@@ -220,7 +158,6 @@ export default () => {
 };
 
 function getUserToken(user) {
-  // sign in a new user and authenticate via a Bearer token
   const loginRes = http.post(
     `${authURI}/token?grant_type=password`,
     JSON.stringify({
@@ -239,6 +176,66 @@ function getUserToken(user) {
   check(authToken, {
     "logged in successfully": () => loginRes.status === 200 && authToken,
   });
-  // console.log(authToken);
   return authToken.toString();
+}
+
+function createJoinMessage(room, authToken, presenceEnabled) {
+  const presenceConfig = presenceEnabled ? { key: "" } : { enabled: false };
+  return JSON.stringify({
+    topic: `realtime:${room}`,
+    event: "phx_join",
+    payload: {
+      config: {
+        broadcast: {
+          self: true,
+        },
+        presence: presenceConfig,
+        private: true,
+      },
+      access_token: authToken,
+    },
+    ref: "1",
+    join_ref: "1",
+  });
+}
+
+function createAccessTokenMessage(room, authToken) {
+  return JSON.stringify({
+    topic: `realtime:${room}`,
+    event: "access_token",
+    payload: {
+      access_token: authToken,
+    },
+    ref: "2",
+  });
+}
+
+function createHeartbeatMessage() {
+  return JSON.stringify({
+    topic: "phoenix",
+    event: "heartbeat",
+    payload: {},
+    ref: 0,
+  });
+}
+
+function createBroadcastMessage(channel, messagePayload) {
+  return JSON.stringify({
+    topic: `realtime:${channel}`,
+    event: "broadcast",
+    payload: {
+      event: "new message",
+      payload: messagePayload,
+    },
+    ref: 0,
+  });
+}
+
+function createMessage() {
+  const jsonOverhead = 50;
+  const messageContentSize = Math.max(0, messageSizeBytes - jsonOverhead);
+  return {
+    created_at: Date.now(),
+    message: randomBytes(messageContentSize),
+  };
 }
