@@ -4,6 +4,7 @@ import ws from "k6/ws";
 import { SharedArray } from "k6/data";
 import { Trend, Counter } from "k6/metrics";
 import { scenario } from "k6/execution";
+import { randomBytes } from "k6/crypto";
 
 import { getRandomInt, scenario as sc, trends } from "./common.js";
 export { handleSummary } from "./summary.js";
@@ -22,7 +23,6 @@ const socketURI = __ENV.MP_URI
 
 const conns = __ENV.CONNS ? parseInt(__ENV.CONNS) : 10;
 const shift = __ENV.SHIFT ? parseInt(__ENV.SHIFT) : 0;
-const instances = __ENV.INSTANCES ? parseInt(__ENV.INSTANCES) : 15;
 const messagesPerSecond = __ENV.MESSAGES_PER_SECOND
   ? parseInt(__ENV.MESSAGES_PER_SECOND)
   : 60;
@@ -31,11 +31,9 @@ const messageSizeKB = __ENV.MESSAGE_SIZE_KB
   : 1;
 const baseDuration = __ENV.DURATION ? __ENV.DURATION : 60;
 const duration = parseInt(baseDuration) + 30;
-const presenceEnabled = __ENV.PRESENCE_ENABLED === "true" || __ENV.PRESENCE_ENABLED === "1";
-
-const messagesPerSecondPerConnection = messagesPerSecond / conns;
-const broadcastInterval = 1000;
-
+const presenceEnabled =
+  __ENV.PRESENCE_ENABLED === "true" || __ENV.PRESENCE_ENABLED === "1";
+const broadcastInterval = 500;
 const latencyTrend = new Trend("latency_trend");
 const counterReceived = new Counter("received_updates");
 
@@ -53,7 +51,6 @@ export const options = {
 export default () => {
   const user = users[(scenario.iterationInTest + shift) % users.length];
   const authToken = getUserToken(user);
-  // const domain = user.email.substring(user.email.indexOf("@") + 1);
 
   const channelsResponse = http.get(
     `${authURI.replace("auth", "rest")}/channel_names?select=name`,
@@ -64,7 +61,11 @@ export default () => {
       },
     }
   );
-  console.log(`Request params: URI=${authURI.replace("auth", "rest") + "/channel_names?select=name"}, apikey=${token}, authToken=${authToken}, user=${user.email}`);
+  console.log(
+    `Request params: URI=${
+      authURI.replace("auth", "rest") + "/channel_names?select=name"
+    }, apikey=${token}, authToken=${authToken}, user=${user.email}`
+  );
   const channels = channelsResponse.json().map((c) => c.name);
   console.log(`Subscribed channels: ${channels}`);
   // console.log(JSON.stringify(channels));
@@ -131,13 +132,13 @@ export default () => {
           );
           const payload = {
             created_at: Date.now(),
-            message: "A".repeat(messageContentSize),
+            message: randomBytes(messageContentSize),
           };
           return payload;
         };
 
-        const messagesToSend = Math.floor(messagesPerSecondPerConnection);
-        const fractionalPart = messagesPerSecondPerConnection - messagesToSend;
+        const messagesToSend = Math.floor(messagesPerSecond);
+        const fractionalPart = messagesPerSecond - messagesToSend;
 
         for (let i = 0; i < messagesToSend; i++) {
           const randomChannel = channels[getRandomInt(0, channels.length)];
