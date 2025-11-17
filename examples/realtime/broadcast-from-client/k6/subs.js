@@ -246,10 +246,14 @@ function createBroadcastMessage(channel, messagePayload) {
 }
 
 function createMessage() {
-  const bytes = crypto.getRandomValues(new Uint8Array(messageSizeKB * 1000));
-  payload = Array.from(bytes)
-    .map((b) => String.fromCharCode(32 + (b % 95)))
-    .join("");
+  const chars =
+    "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_abcdefghijklmnopqrstuvwxyz{|}~";
+  const messageLength = 10 * 1000;
+  let payload = "";
+
+  for (let i = 0; i < messageLength; i++) {
+    payload += chars[Math.floor(Math.random() * chars.length)];
+  }
 
   return {
     created_at: Date.now(),
