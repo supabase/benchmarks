@@ -4,8 +4,6 @@ import ws from "k6/ws";
 import { SharedArray } from "k6/data";
 import { Trend, Counter } from "k6/metrics";
 import { scenario } from "k6/execution";
-import { randomBytes } from "k6/crypto";
-
 import { getRandomInt, scenario as sc, trends } from "./common.js";
 export { handleSummary } from "./summary.js";
 
@@ -36,7 +34,6 @@ const presenceEnabled =
 const broadcastInterval = 1000;
 const latencyTrend = new Trend("latency_trend");
 const counterReceived = new Counter("received_updates");
-const messageSizeBytes = messageSizeKB * 1024;
 
 const to = {};
 
@@ -85,10 +82,16 @@ export default () => {
       const now = Date.now();
       msg = JSON.parse(msg);
 
-      if (msg.event === "phx_reply" && msg.payload && msg.payload.status === "ok") {
+      if (
+        msg.event === "phx_reply" &&
+        msg.payload &&
+        msg.payload.status === "ok"
+      ) {
         const channelName = msg.topic.replace("realtime:", "");
         joinedChannels.add(channelName);
-        console.log(`Successfully joined channel: ${channelName} (${joinedChannels.size}/${channels.length})`);
+        console.log(
+          `Successfully joined channel: ${channelName} (${joinedChannels.size}/${channels.length})`
+        );
 
         check(msg, {
           "subscribed to realtime": (msg) => msg.payload.status === "ok",
@@ -107,7 +110,9 @@ export default () => {
 
               const start = Date.now();
               const randomChannel = channels[getRandomInt(0, channels.length)];
-              socket.send(createBroadcastMessage(randomChannel, createMessage()));
+              socket.send(
+                createBroadcastMessage(randomChannel, createMessage())
+              );
               const finish = Date.now();
 
               const sleepTime =
@@ -117,7 +122,10 @@ export default () => {
 
               if (index + 1 < messagesToSend) {
                 if (sleepTime > 0) {
-                  socket.setTimeout(() => sendMessage(index + 1), sleepTime * 1000);
+                  socket.setTimeout(
+                    () => sendMessage(index + 1),
+                    sleepTime * 1000
+                  );
                 } else {
                   sendMessage(index + 1);
                 }
@@ -238,10 +246,13 @@ function createBroadcastMessage(channel, messagePayload) {
 }
 
 function createMessage() {
-  const jsonOverhead = 50;
-  const messageContentSize = Math.max(0, messageSizeBytes - jsonOverhead);
+  const bytes = crypto.getRandomValues(new Uint8Array(messageSizeKB * 1000));
+  payload = Array.from(bytes)
+    .map((b) => String.fromCharCode(32 + (b % 95)))
+    .join("");
+
   return {
     created_at: Date.now(),
-    message: randomBytes(messageContentSize),
+    message: payload,
   };
 }
