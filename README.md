@@ -14,6 +14,41 @@ Platform to run and keep the history of benchmark runs.
 - [Prometheus](https://prometheus.io) - Store metrics for benchmark results.
 - [Telegraf](https://www.influxdata.com/time-series-platform/telegraf/) - Send benchmark metrics to Prometheus.
 
+## Uploading Benchmarks to Supabench
+
+To upload a benchmark to supabench, you need to create a zip archive of your benchmark folder.
+
+### How to Create a Zip Archive
+
+1. **Navigate to your benchmark folder** (e.g., `examples/realtime/broadcast-from-client`)
+
+2. **Create a zip file** containing all the files in the folder:
+   ```bash
+   # From inside the benchmark folder
+   zip -r benchmark.zip .
+   ```
+
+3. **Upload the zip file** through the supabench UI when creating or updating a benchmark secret.
+
+### Example Structure
+
+Your zip file should contain a structure like this:
+```
+benchmark.zip
+├── main.tf
+├── variables.tf
+├── k6/
+│   ├── common.js
+│   ├── subs.js
+│   ├── Makefile
+│   └── summary.js
+└── modules/
+    └── script/
+        ├── main.tf
+        ├── variables.tf
+        └── entrypoint.sh.tpl
+```
+
 ## More Info
 
 More information about the project can be found on the [Github Wiki](https://github.com/supabase/supabench/wiki)
