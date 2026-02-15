@@ -1,0 +1,6 @@
+.env.local
+summary.json
+results_*.json
+package-lock.json
+node_modules/
+.DS_Store
