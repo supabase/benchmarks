@@ -1,6 +1,6 @@
 import { check } from "k6";
 import http from "k6/http";
-import ws from "k6/ws";
+import { WebSocket } from 'k6/experimental/websockets';
 import { SharedArray } from "k6/data";
 import { Trend, Counter } from "k6/metrics";
 import { scenario } from "k6/execution";
@@ -24,9 +24,6 @@ const shift = __ENV.SHIFT ? parseInt(__ENV.SHIFT) : 0;
 const messagesPerSecond = __ENV.MESSAGES_PER_SECOND
   ? parseInt(__ENV.MESSAGES_PER_SECOND)
   : 60;
-const messageSizeKB = __ENV.MESSAGE_SIZE_KB
-  ? parseInt(__ENV.MESSAGE_SIZE_KB)
-  : 1;
 const baseDuration = __ENV.DURATION ? __ENV.DURATION : 60;
 const duration = parseInt(baseDuration) + 30;
 const presenceEnabled =
@@ -60,115 +57,98 @@ export default () => {
 
   const channels = channelsResponse.json().map((c) => c.name);
   const URL = `${socketURI}?apikey=${token}`;
-  const joinedChannels = new Set();
-  let broadcastIntervalId = null;
+  const ws = new WebSocket(URL);
 
-  const res = ws.connect(URL, {}, (socket) => {
-    socket.on("open", () => {
-      channels.map((room) =>
-        socket.send(createJoinMessage(room, authToken, presenceEnabled))
-      );
-      channels.map((room) =>
-        socket.send(createAccessTokenMessage(room, authToken))
-      );
+  ws.onopen = () => {
 
-      socket.setInterval(
-        () => socket.send(createHeartbeatMessage()),
-        25 * 1000
-      );
-    });
+    // Join channels
+    channels.map((room) =>
+      ws.send(createJoinMessage(room, authToken, presenceEnabled))
+    );
+    // Send access tokens
+    channels.map((room) =>
+      ws.send(createAccessTokenMessage(room, authToken))
+    );
 
-    socket.on("message", (msg) => {
-      const now = Date.now();
-      msg = JSON.parse(msg);
+    // Send heartbeat
+    setInterval(
+      () => ws.send(createHeartbeatMessage()),
+      25 * 1000
+    );
 
-      if (
-        msg.event === "phx_reply" &&
-        msg.payload &&
-        msg.payload.status === "ok"
-      ) {
-        const channelName = msg.topic.replace("realtime:", "");
-        joinedChannels.add(channelName);
-        console.log(
-          `Successfully joined channel: ${channelName} (${joinedChannels.size}/${channels.length})`
-        );
+    setInterval(() => {
+      const messagesToSend = Math.ceil(messagesPerSecond);
 
-        check(msg, {
-          "subscribed to realtime": (msg) => msg.payload.status === "ok",
-        });
-
-        if (joinedChannels.size === channels.length && !broadcastIntervalId) {
-          console.log("All channels joined, starting broadcast");
-          broadcastIntervalId = socket.setInterval(() => {
-            const messagesToSend = Math.ceil(messagesPerSecond);
-
-            const sendMessage = (index) => {
-              let rand = 0;
-              if (messagesToSend > 1) {
-                rand = getRandomInt(0, messagesToSend);
-              }
-
-              const start = Date.now();
-              const randomChannel = channels[getRandomInt(0, channels.length)];
-              socket.send(
-                createBroadcastMessage(randomChannel, createMessage())
-              );
-              const finish = Date.now();
-
-              const sleepTime =
-                ((messagesToSend - rand) / messagesToSend) *
-                  (broadcastInterval / 1000) -
-                (finish - start) / 1000;
-
-              if (index + 1 < messagesToSend) {
-                if (sleepTime > 0) {
-                  socket.setTimeout(
-                    () => sendMessage(index + 1),
-                    sleepTime * 1000
-                  );
-                } else {
-                  sendMessage(index + 1);
-                }
-              }
-            };
-
-            if (messagesToSend > 0) {
-              sendMessage(0);
-            }
-          }, broadcastInterval);
+      const sendMessage = (index) => {
+        let rand = 0;
+        if (messagesToSend > 1) {
+          rand = getRandomInt(0, messagesToSend);
         }
-      }
 
-      if (msg.event !== "broadcast") {
-        return;
-      }
+        const start = Date.now();
+        const randomChannel = channels[getRandomInt(0, channels.length)];
+        ws.send(createBroadcastMessage(randomChannel, createMessage()));
+        const finish = Date.now();
 
-      const type = msg.payload.event;
-      let updated = 0;
-      if (msg.payload.payload) {
-        updated = msg.payload.payload.created_at;
-      }
-      console.log(`Message received: ${JSON.stringify(msg)}`);
-      latencyTrend.add(now - updated, { type: type });
-      counterReceived.add(1);
+        const sleepTime =
+          ((messagesToSend - rand) / messagesToSend) *
+          (broadcastInterval / 1000) -
+          (finish - start) / 1000;
 
+        if (index + 1 < messagesToSend) {
+          if (sleepTime > 0) {
+            setTimeout(() => sendMessage(index + 1), sleepTime * 1000);
+          } else {
+            sendMessage(index + 1);
+          }
+        }
+      };
+
+      if (messagesToSend > 0) {
+        sendMessage(0);
+      }
+    }, broadcastInterval);
+  }
+
+  ws.onmessage = (msg) => {
+    const now = Date.now();
+    // console.log(`Message received (raw): ${JSON.stringify(msg)}`);
+    msg = JSON.parse(msg.data);
+
+    if (msg.event === "system") {
       check(msg, {
-        "got realtime notification": (msg) => msg.event === "broadcast",
+        "subscribed to realtime": (msg) =>
+          (msg.topic === msg.payload.status) === "ok",
       });
+    }
+
+    if (msg.event !== "broadcast") {
+      return;
+    }
+
+    const type = msg.payload.event;
+    let updated = 0;
+    if (msg.payload.payload) {
+      updated = msg.payload.payload.created_at;
+    }
+    // console.log(`Message received: ${JSON.stringify(msg)}`);
+    latencyTrend.add(now - updated, { type: type });
+    counterReceived.add(1);
+
+    check(msg, {
+      "got realtime notification": (msg) => msg.event === "broadcast",
     });
+  }
 
-    socket.on("error", (e) => {
-      if (e.error() != "websocket: close sent") {
-        console.error("An unexpected error occurred: ", e.error());
-      }
-    });
+  ws.onerror = (e) => {
+    if (e.error() != "websocket: close sent") {
+      console.error("An unexpected error occurred: ", e.error());
+    }
+  }
 
-    socket.setTimeout(function () {
-      socket.close();
-    }, duration * 1000);
-  });
-
-  check(res, { "status is 101": (r) => r && r.status === 101 });
+  setTimeout(function () {
+    ws.close();
+  }, duration * 1000);
 };
 
 function getUserToken(user) {
@@ -201,7 +181,7 @@ function createJoinMessage(room, authToken, presenceEnabled) {
     payload: {
       config: {
         broadcast: {
-          self: false,
+          self: true,
         },
         presence: presenceConfig,
         private: true,

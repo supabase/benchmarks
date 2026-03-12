@@ -1,13 +1,15 @@
 #!/bin/bash
 
-wget https://golang.org/dl/go1.19.linux-amd64.tar.gz
-sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.19.linux-amd64.tar.gz
+wget https://golang.org/dl/go1.22.4.linux-amd64.tar.gz
+sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.22.4.linux-amd64.tar.gz
 export PATH=$PATH:/usr/local/go/bin
 
-export K6_VERSION='v0.37.0'
+go install go.k6.io/xk6@latest
+
+export K6_VERSION='v1.3.0'
 
 ~/go/bin/xk6 build --output /tmp/k6/k6 \
-  --with github.com/jdheyburn/xk6-prometheus@v0.1.6 \
+  --with github.com/szkiba/xk6-prometheus@0f8e5dd \
   --with github.com/grafana/xk6-sql@659485a
 
 telegraf --config telegraf.conf &>/dev/null &
