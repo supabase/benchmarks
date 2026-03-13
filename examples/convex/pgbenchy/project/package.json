@@ -1,0 +1,29 @@
+{
+  "name": "convex-tpcb",
+  "version": "1.0.0",
+  "description": "TPC-B benchmark for Convex using k6",
+  "private": true,
+  "scripts": {
+    "dev": "convex dev",
+    "deploy": "convex deploy",
+    "seed": "node scripts/seed.js",
+    "seed:small": "node scripts/seed.js 1",
+    "seed:medium": "node scripts/seed.js 10",
+    "seed:large": "node scripts/seed.js 100",
+    "clear": "node scripts/clear.js",
+    "test": "k6 run k6/tpcb-convex.js",
+    "test:quick": "k6 run k6/tpcb-convex.js -e SCALE_FACTOR=1 -e CONNS=5 -e CONSECUTIVE_DURATION=30",
+    "test:medium": "k6 run k6/tpcb-convex.js -e SCALE_FACTOR=10 -e CONNS=20 -e CONSECUTIVE_DURATION=300",
+    "test:full": "k6 run k6/tpcb-convex.js -e SCALE_FACTOR=10 -e CONNS=50 -e CONSECUTIVE_DURATION=600",
+    "bench": "bash scripts/run.sh",
+    "bench:quick": "bash scripts/run.sh 1 60 5",
+    "bench:medium": "bash scripts/run.sh 10 300 20",
+    "bench:full": "bash scripts/run.sh 10 600 50"
+  },
+  "dependencies": {
+    "convex": "^1.17.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
