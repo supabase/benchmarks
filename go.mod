@@ -7,7 +7,7 @@ require (
 	github.com/labstack/echo/v5 v5.2.0
 	github.com/mholt/archiver/v4 v4.0.0-alpha.7
 	github.com/pocketbase/dbx v1.11.0
-	github.com/pocketbase/pocketbase v0.22.42
+	github.com/pocketbase/pocketbase v0.22.48
 	github.com/rs/zerolog v1.27.0
 	github.com/spf13/viper v1.12.0
 )
@@ -34,6 +34,7 @@ require (
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.1 // indirect
 	github.com/pierrec/lz4/v4 v4.1.14 // indirect
+	github.com/pocketbase/ozzo-validation/v4 v4.3.0 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/spf13/afero v1.8.2 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
@@ -72,7 +73,6 @@ require (
 	github.com/domodwyer/mailyak/v3 v3.6.2 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/ganigeorgiev/fexpr v0.4.1 // indirect
-	github.com/go-ozzo/ozzo-validation/v4 v4.3.0 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/google/go-github/v64 v64.0.0
